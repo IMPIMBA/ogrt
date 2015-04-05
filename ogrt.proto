@@ -1,0 +1,19 @@
+package OGRT;
+
+enum MessageType {
+  ForkMsg = 100;
+  ExecveMsg = 101;
+}
+
+message Fork {
+  required int32 parent_pid = 1;
+  required int32 child_pid = 2;
+  optional string name = 3;
+}
+
+message Execve {
+  required int32 pid = 100;
+  required string filename = 101;
+  optional string arguments = 102;
+  repeated string environment_variable = 103;
+}
