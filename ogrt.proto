@@ -14,6 +14,6 @@ message Fork {
 message Execve {
   required int32 pid = 100;
   required string filename = 101;
-  optional string arguments = 102;
-  repeated string environment_variable = 103;
+  repeated string arguments = 102;
+  repeated string environment_variables = 103;
 }
