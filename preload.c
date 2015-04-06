@@ -10,27 +10,15 @@
 #include <stdio.h>
 #include "ogrt.pb-c.h"
 
+/** macro for function hooking. shamelessly stolen from snoopy */
 #define FN(ptr, type, name, args)  ptr = (type (*)args)dlsym(RTLD_NEXT, name)
 
 #define SOCKET_PATH "/tmp/ogrt.sock"
 
+/* global variables */
 static bool __ogrt_active = 0;
 static int __daemon_socket = -1;
-
-//void *_dl_sym(void *, const char *, void *);
-//void *dlsym(void *handle, const char *name)
-//{
-//    static void * (*real_dlsym)(void *, const char *)=NULL;
-//    if (real_dlsym == NULL){
-//        real_dlsym=_dl_sym(RTLD_NEXT, "dlsym", dlsym);
-//    }
-//    /* my target binary is even asking for dlsym() via dlsym()... */
-//    if (!strcmp(name,"dlsym"))
-//        return (void*)dlsym;
-//    printf("I be dlysm: %s from %d \n", name, getpid());
-//    return real_dlsym(handle,name);
-//}
-
+static pid_t __pid = 0;
 
 /**
  * Initialize preload library.
@@ -39,8 +27,7 @@ static int __daemon_socket = -1;
  * the daemon fails the init function will return with a non-zero exit code, but program
  * execution will continue as normal.
  */
-__attribute__((constructor))
-static int init()
+__attribute__((constructor)) static int init()
 {
   char *env_ogrt_active = getenv("OG_ASSERT_DOMINANCE");
   if(env_ogrt_active != NULL && (strcmp(env_ogrt_active, "yes") == 0 || strcmp(env_ogrt_active, "true") == 0 || strcmp(env_ogrt_active, "1") == 0)) {
@@ -62,7 +49,10 @@ static int init()
       __ogrt_active = 0;
       return 1;
     }
-    fprintf(stderr, "OG be watchin' yo!\n");
+    /* cache PID of current process - we are reusing that quite often */
+    __pid = getpid();
+
+    fprintf(stderr, "OG be watchin' yo! (%d)\n", __pid);
   }
   return 0;
 }
@@ -78,43 +68,71 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     FN(unhooked_execve, int, "execve", (const char *, char **const, char **const));
   }
   if(__ogrt_active) {
-    fprintf(stderr, "I be execve: calling %s from %d\n", filename, getpid());
+    fprintf(stderr, "I be execve: calling %s from %d\n", filename, __pid);
 
     /* Initialize the protobuf message, fill it, pack it and send it to the daemon */
-    OGRT__Execve msg = OGRT__EXECVE__INIT;
-    msg.pid = getpid();
+    OGRT__Execve msg;
+    ogrt__execve__init(&msg);
+    msg.pid = __pid;
     msg.filename = strdup(filename);
-    int envvar_count = 0, sum = 0;
+
+    /* count number of environment variables and pass to message */
+    size_t envvar_count = 0;
     for(char **iterator = (char **)envp; *iterator != NULL; iterator++){
-      //printf("%s\n", *iterator);
-      sum += strlen(*iterator)+1;
       envvar_count++;
     }
-    printf("envvar = %d\n", envvar_count);
-    msg.n_environment_variable = envvar_count;
-    msg.environment_variable = (char **)malloc(sum);
-    memcpy((&msg)->environment_variable, envp, sum);
+    msg.n_environment_variables = envvar_count;
+    msg.environment_variables = (char **)envp;
+    /* count number of arguments and pass to message */
+    size_t argv_count = 0;
+    for(char **iterator = (char **)argv; *iterator != NULL; iterator++){
+      argv_count++;
+    }
+    msg.n_arguments = argv_count;
+    msg.arguments = (char **)argv;
 
-    unsigned int msg_len = ogrt__execve__get_packed_size(&msg);
-    printf("msg_size = %d\n", msg_len);
-    void *msg_serialized = malloc(ogrt__execve__get_packed_size(&msg));
+    size_t msg_len = ogrt__execve__get_packed_size(&msg);
+    void *msg_serialized = malloc(msg_len);
     ogrt__execve__pack(&msg, msg_serialized);
     send(__daemon_socket, msg_serialized, msg_len, 0);
-    free(msg.filename);
-    free(msg.environment_variable);
-    free(msg_serialized);
 
+    free(msg.filename);
+    free(msg_serialized);
   }
 
   /* Call the original function and return its output */
   return (*unhooked_execve) (filename, (char**) argv, (char **) envp);
 }
 
-int execv(const char *filename, char *const argv[]) {
-	static int (*unhooked_execv)(const char *, char **) = NULL;
-  if(unhooked_execv == NULL) {
-    FN(unhooked_execv, int, "execv", (const char *, char **const));
+/**
+ * Hook fork function.
+ * This function intercepts the fork call. If OGRT is active it will send
+ * the PID of the forked function and the PID of the current process to the OGRT daemon.
+ */
+int fork(void){
+  static int (*unhooked_fork)() = NULL;
+  if(unhooked_fork == NULL) { /* Cache the function address */
+    FN(unhooked_fork, int, "fork", (void));
   }
-	printf("I be execv: calling %s from %d\n", filename, getpid());
-	return (*unhooked_execv) (filename, (char **) argv);
+
+  int ret = (*unhooked_fork)();
+  /* ignore parent process */
+  if(__ogrt_active && ret != 0) {
+    fprintf(stderr, "I be fork: spawned %d from %d\n", ret, __pid);
+
+    /* Initialize the protobuf message, fill it, pack it and send it to the daemon */
+    OGRT__Fork msg;
+    ogrt__fork__init(&msg);
+    msg.parent_pid = __pid;
+    msg.child_pid = ret;
+
+    size_t msg_len = ogrt__fork__get_packed_size(&msg);
+    void *msg_serialized = malloc(msg_len);
+    ogrt__fork__pack(&msg, msg_serialized);
+    send(__daemon_socket, msg_serialized, msg_len, 0);
+    free(msg_serialized);
+  }
+
+  /* return output of original function */
+  return ret;
 }
