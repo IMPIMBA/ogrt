@@ -3,7 +3,7 @@ package main
 import (
 	"code.google.com/p/goprotobuf/proto"
 	"fmt"
-	"github.com/georg-rath/xalted/messages"
+	"github.com/georg-rath/ogrt/messages"
 	"net"
 	"os"
 	"os/signal"
@@ -51,12 +51,13 @@ func handleRequest(conn net.Conn) {
 	fmt.Println("Handling packet...")
 	//Close the connection when the function exits
 	defer conn.Close()
-	//Create a data buffer of type byte slice with capacity of 4096
-	data := make([]byte, 4096)
+	//Create a data buffer of type byte slice with capacity of 16k
+	data := make([]byte, 16384)
 	//Read the data waiting on the connection and put it in the data buffer
 	for {
 		n, err := conn.Read(data)
 		if err != nil {
+			fmt.Printf("Received %d bytes\n", n)
 			return
 		}
 		fmt.Println("Decoding Protobuf message")
@@ -70,7 +71,11 @@ func handleRequest(conn net.Conn) {
 
 		fmt.Println(protodata.GetPid())
 		fmt.Println(protodata.GetFilename())
-		for _, element := range protodata.GetEnvironmentVariable() {
+		for _, element := range protodata.GetEnvironmentVariables() {
+			fmt.Println(element)
+		}
+
+		for _, element := range protodata.GetArguments() {
 			fmt.Println(element)
 		}
 	}
