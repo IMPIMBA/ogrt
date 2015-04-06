@@ -46,13 +46,14 @@ struct  _OGRT__Execve
   ProtobufCMessage base;
   int32_t pid;
   char *filename;
-  char *arguments;
-  size_t n_environment_variable;
-  char **environment_variable;
+  size_t n_arguments;
+  char **arguments;
+  size_t n_environment_variables;
+  char **environment_variables;
 };
 #define OGRT__EXECVE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&ogrt__execve__descriptor) \
-    , 0, NULL, NULL, 0,NULL }
+    , 0, NULL, 0,NULL, 0,NULL }
 
 
 /* OGRT__Fork methods */

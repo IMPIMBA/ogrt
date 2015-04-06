@@ -186,9 +186,9 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[4] =
   {
     "arguments",
     102,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
+    offsetof(OGRT__Execve, n_arguments),
     offsetof(OGRT__Execve, arguments),
     NULL,
     NULL,
@@ -196,12 +196,12 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[4] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "environment_variable",
+    "environment_variables",
     103,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
-    offsetof(OGRT__Execve, n_environment_variable),
-    offsetof(OGRT__Execve, environment_variable),
+    offsetof(OGRT__Execve, n_environment_variables),
+    offsetof(OGRT__Execve, environment_variables),
     NULL,
     NULL,
     0,             /* flags */
@@ -210,7 +210,7 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[4] =
 };
 static const unsigned ogrt__execve__field_indices_by_name[] = {
   2,   /* field[2] = arguments */
-  3,   /* field[3] = environment_variable */
+  3,   /* field[3] = environment_variables */
   1,   /* field[1] = filename */
   0,   /* field[0] = pid */
 };
