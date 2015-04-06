@@ -62,7 +62,7 @@ func handleRequest(conn net.Conn) {
 		}
 		fmt.Println("Decoding Protobuf message")
 
-		protodata := new(ogrt.Execve)
+		protodata := new(OGRT.Execve)
 
 		err = proto.Unmarshal(data[0:n], protodata)
 		if err != nil {

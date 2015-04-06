@@ -12,7 +12,7 @@ It has these top-level messages:
 	Fork
 	Execve
 */
-package ogrt
+package OGRT
 
 import proto "github.com/golang/protobuf/proto"
 import math "math"
@@ -87,11 +87,11 @@ func (m *Fork) GetName() string {
 }
 
 type Execve struct {
-	Pid                 *int32   `protobuf:"varint,100,req,name=pid" json:"pid,omitempty"`
-	Filename            *string  `protobuf:"bytes,101,req,name=filename" json:"filename,omitempty"`
-	Arguments           *string  `protobuf:"bytes,102,opt,name=arguments" json:"arguments,omitempty"`
-	EnvironmentVariable []string `protobuf:"bytes,103,rep,name=environment_variable" json:"environment_variable,omitempty"`
-	XXX_unrecognized    []byte   `json:"-"`
+	Pid                  *int32   `protobuf:"varint,100,req,name=pid" json:"pid,omitempty"`
+	Filename             *string  `protobuf:"bytes,101,req,name=filename" json:"filename,omitempty"`
+	Arguments            []string `protobuf:"bytes,102,rep,name=arguments" json:"arguments,omitempty"`
+	EnvironmentVariables []string `protobuf:"bytes,103,rep,name=environment_variables" json:"environment_variables,omitempty"`
+	XXX_unrecognized     []byte   `json:"-"`
 }
 
 func (m *Execve) Reset()         { *m = Execve{} }
@@ -112,16 +112,16 @@ func (m *Execve) GetFilename() string {
 	return ""
 }
 
-func (m *Execve) GetArguments() string {
-	if m != nil && m.Arguments != nil {
-		return *m.Arguments
+func (m *Execve) GetArguments() []string {
+	if m != nil {
+		return m.Arguments
 	}
-	return ""
+	return nil
 }
 
-func (m *Execve) GetEnvironmentVariable() []string {
+func (m *Execve) GetEnvironmentVariables() []string {
 	if m != nil {
-		return m.EnvironmentVariable
+		return m.EnvironmentVariables
 	}
 	return nil
 }
