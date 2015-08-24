@@ -1,9 +1,11 @@
 package main
 
 import (
-	"code.google.com/p/goprotobuf/proto"
+	"encoding/binary"
 	"fmt"
 	"github.com/georg-rath/ogrt/messages"
+	"github.com/golang/protobuf/proto"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -52,31 +54,49 @@ func handleRequest(conn net.Conn) {
 	//Close the connection when the function exits
 	defer conn.Close()
 	//Create a data buffer of type byte slice with capacity of 16k
-	data := make([]byte, 16384)
+	data := make([]byte, 32768)
 	//Read the data waiting on the connection and put it in the data buffer
 	for {
-		n, err := conn.Read(data)
-		if err != nil {
-			fmt.Printf("Connection closed. Received %d bytes.\n", n)
+		var msg_type int32
+		err := binary.Read(conn, binary.BigEndian, &msg_type)
+		if err == io.EOF {
+			fmt.Println("Connection closed by remote end")
+			return
+		} else if err != nil {
+			fmt.Println("Connection closed unexpectedly.")
+			fmt.Println(err)
 			return
 		}
-		fmt.Println("Decoding Protobuf message")
 
-		protodata := new(OGRT.Execve)
-
-		err = proto.Unmarshal(data[0:n], protodata)
-		if err != nil {
-			fmt.Println("error decoding")
+		n, err := conn.Read(data)
+		if err == io.EOF {
+			fmt.Printf("Connection closed by remote end.\n")
+			return
+		} else if err != nil {
+			fmt.Printf("Connection closed unexpectedly after receiving %d bytes.\n", n)
+			fmt.Println(err)
+			return
 		}
 
-		fmt.Println(protodata.GetPid())
-		fmt.Println(protodata.GetFilename())
-		//for _, element := range protodata.GetEnvironmentVariables() {
-		//	fmt.Println(element)
-		//}
+		fmt.Printf("Decoding Protobuf message with size %d\n", n)
 
-		for _, element := range protodata.GetArguments() {
-			fmt.Println(element)
+		if msg_type == OGRT.MessageType_value["ExecveMsg"] {
+			protodata := new(OGRT.Execve)
+
+			err = proto.Unmarshal(data[0:n], protodata)
+			if err != nil {
+				fmt.Println("error decoding")
+			}
+
+			//fmt.Println(protodata.GetPid())
+			//fmt.Println(protodata.GetFilename())
+			//for _, element := range protodata.GetEnvironmentVariables() {
+			//	fmt.Println(element)
+			//}
+
+			//for _, element := range protodata.GetArguments() {
+			//	fmt.Println(element)
+			//}
 		}
 	}
 }

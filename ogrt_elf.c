@@ -43,7 +43,7 @@ int ogrt_read_info(const char *filename)
             errx(EXIT_FAILURE, "elf_strptr() failed: %s.", elf_errmsg(-1));
 
         if(strcmp(name, OGRT_SECTION_NAME)== 0) {
-          printf("OGRT \n");
+          printf("OGRT section found! \n");
           offset = shdr.sh_offset;
         }
     }
@@ -52,12 +52,12 @@ int ogrt_read_info(const char *filename)
 
     if(offset != 0) {
       lseek(fd, offset, SEEK_SET);
-      read(fd, buf, 3);
-      printf("%s \n", buf);
+      read(fd, buf, 38);
+      printf("section contains: %s \n", buf);
       (void) close(fd);
       return 0;
     } else {
-      printf("OGRT not found. \n");
+      printf("OGRT section not found. \n");
       (void) close(fd);
       return 1;
     }

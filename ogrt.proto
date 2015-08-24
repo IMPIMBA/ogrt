@@ -16,4 +16,5 @@ message Execve {
   required string filename = 101;
   repeated string arguments = 102;
   repeated string environment_variables = 103;
+  optional string uuid = 104;
 }

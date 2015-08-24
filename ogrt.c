@@ -8,8 +8,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 #include "ogrt.h"
-#include "ogrt.pb-c.h"
 
 /** macro for function hooking. shamelessly stolen from snoopy */
 #define FN(ptr, type, name, args)  ptr = (type (*)args)dlsym(RTLD_NEXT, name)
@@ -50,6 +50,8 @@ __attribute__((constructor)) static int init()
       __ogrt_active = 0;
       return 1;
     }
+
+    fprintf(stderr, "OGRT: Connected to socket.\n");
     /* cache PID of current process - we are reusing that quite often */
     __pid = getpid();
 
@@ -92,6 +94,9 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     msg.n_arguments = argv_count;
     msg.arguments = (char **)argv;
 
+    int type = htonl(OGRT__MESSAGE_TYPE__ExecveMsg);
+    send(__daemon_socket, &type, sizeof(type), 0);
+
     size_t msg_len = ogrt__execve__get_packed_size(&msg);
     void *msg_serialized = malloc(msg_len);
     ogrt__execve__pack(&msg, msg_serialized);
@@ -126,6 +131,9 @@ int fork(void){
     ogrt__fork__init(&msg);
     msg.parent_pid = __pid;
     msg.child_pid = ret;
+
+    int type = htonl(OGRT__MESSAGE_TYPE__ForkMsg);
+    send(__daemon_socket, &type, sizeof(OGRT__MessageType), 0);
 
     size_t msg_len = ogrt__fork__get_packed_size(&msg);
     void *msg_serialized = malloc(msg_len);
