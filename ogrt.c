@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "ogrt.h"
 #include "ogrt.pb-c.h"
 
 /** macro for function hooking. shamelessly stolen from snoopy */
@@ -16,9 +17,9 @@
 #define SOCKET_PATH "/tmp/ogrt.sock"
 
 /* global variables */
-static bool __ogrt_active = 0;
-static int __daemon_socket = -1;
-static pid_t __pid = 0;
+static bool  __ogrt_active   = 0;
+static int   __daemon_socket = -1;
+static pid_t __pid           = 0;
 
 /**
  * Initialize preload library.
@@ -33,7 +34,7 @@ __attribute__((constructor)) static int init()
   if(env_ogrt_active != NULL && (strcmp(env_ogrt_active, "yes") == 0 || strcmp(env_ogrt_active, "true") == 0 || strcmp(env_ogrt_active, "1") == 0)) {
     __ogrt_active = true;
   }
-  if(__ogrt_active) {
+  if(__ogrt_active && __daemon_socket < 0) {
     __daemon_socket = socket(AF_UNIX, SOCK_STREAM, 0);
     if(__daemon_socket < 0) {
       perror("socket");
@@ -52,7 +53,7 @@ __attribute__((constructor)) static int init()
     /* cache PID of current process - we are reusing that quite often */
     __pid = getpid();
 
-    fprintf(stderr, "OG be watchin' yo! (%d)\n", __pid);
+    fprintf(stderr, "OG be watchin' yo! (process %d with parent %d)\n", __pid, getppid());
   }
   return 0;
 }

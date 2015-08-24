@@ -57,7 +57,7 @@ func handleRequest(conn net.Conn) {
 	for {
 		n, err := conn.Read(data)
 		if err != nil {
-			fmt.Printf("Received %d bytes\n", n)
+			fmt.Printf("Connection closed. Received %d bytes.\n", n)
 			return
 		}
 		fmt.Println("Decoding Protobuf message")
@@ -71,9 +71,9 @@ func handleRequest(conn net.Conn) {
 
 		fmt.Println(protodata.GetPid())
 		fmt.Println(protodata.GetFilename())
-		for _, element := range protodata.GetEnvironmentVariables() {
-			fmt.Println(element)
-		}
+		//for _, element := range protodata.GetEnvironmentVariables() {
+		//	fmt.Println(element)
+		//}
 
 		for _, element := range protodata.GetArguments() {
 			fmt.Println(element)
