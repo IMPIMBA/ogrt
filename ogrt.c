@@ -94,16 +94,16 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     msg.n_arguments = argv_count;
     msg.arguments = (char **)argv;
 
-    int type = htonl(OGRT__MESSAGE_TYPE__ExecveMsg);
-    send(__daemon_socket, &type, sizeof(type), 0);
-
     size_t msg_len = ogrt__execve__get_packed_size(&msg);
-    void *msg_serialized = malloc(msg_len);
+
+    void *msg_serialized = NULL, *msg_buffer = NULL;
+    int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ExecveMsg, msg_len, &msg_buffer, &msg_serialized);
+
     ogrt__execve__pack(&msg, msg_serialized);
-    send(__daemon_socket, msg_serialized, msg_len, 0);
+    send(__daemon_socket, msg_buffer, send_length, 0);
 
     free(msg.filename);
-    free(msg_serialized);
+    free(msg_buffer);
   }
 
   /* Call the original function and return its output */
@@ -132,16 +132,42 @@ int fork(void){
     msg.parent_pid = __pid;
     msg.child_pid = ret;
 
-    int type = htonl(OGRT__MESSAGE_TYPE__ForkMsg);
-    send(__daemon_socket, &type, sizeof(OGRT__MessageType), 0);
-
     size_t msg_len = ogrt__fork__get_packed_size(&msg);
-    void *msg_serialized = malloc(msg_len);
+
+    void *msg_serialized = NULL, *msg_buffer = NULL;
+    int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ForkMsg, msg_len, &msg_buffer, &msg_serialized);
+
     ogrt__fork__pack(&msg, msg_serialized);
-    send(__daemon_socket, msg_serialized, msg_len, 0);
-    free(msg_serialized);
+    send(__daemon_socket, msg_buffer, send_length, 0);
+    free(msg_buffer);
   }
 
   /* return output of original function */
   return ret;
+}
+
+/**
+ * Prepare send buffer for shipping to daemon.
+ * Takes a message type and the length of the payload and return the beginning of
+ * the buffer and the beginning of the payload.
+ * Message format:
+ *       32bit            32bit                  up to 32bit length
+ * +----------------+----------------+--------------------------------------------+
+ * |  message type  | payload_length |                payload                     |
+ * +----------------+----------------+--------------------------------------------+
+ *
+ * This function is incredibly ugly. Should be reworked, but it works, right?
+ */
+int ogrt_prepare_sendbuffer(const int message_type, const int payload_length, void **buffer, void **payload) {
+    int32_t type = htonl(message_type);
+    int32_t length = htonl(payload_length);
+    int total_length = payload_length + sizeof(type) + sizeof(length);
+
+    *buffer = malloc(total_length);
+    *payload = (((char *)*buffer) + sizeof(type) + sizeof(length));
+
+    memcpy(*buffer, &type, sizeof(type));
+    memcpy(*buffer + 4, &length, sizeof(length));
+
+    return total_length;
 }

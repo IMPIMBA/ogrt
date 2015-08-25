@@ -54,21 +54,10 @@ func handleRequest(conn net.Conn) {
 	//Close the connection when the function exits
 	defer conn.Close()
 	//Create a data buffer of type byte slice with capacity of 16k
-	data := make([]byte, 32768)
 	//Read the data waiting on the connection and put it in the data buffer
 	for {
-		var msg_type int32
-		err := binary.Read(conn, binary.BigEndian, &msg_type)
-		if err == io.EOF {
-			fmt.Println("Connection closed by remote end")
-			return
-		} else if err != nil {
-			fmt.Println("Connection closed unexpectedly.")
-			fmt.Println(err)
-			return
-		}
-
-		n, err := conn.Read(data)
+		header := make([]byte, 8)
+		n, err := conn.Read(header)
 		if err == io.EOF {
 			fmt.Printf("Connection closed by remote end.\n")
 			return
@@ -78,25 +67,41 @@ func handleRequest(conn net.Conn) {
 			return
 		}
 
-		fmt.Printf("Decoding Protobuf message with size %d\n", n)
+		msg_type := int32(binary.BigEndian.Uint32(header[0:4]))
+		msg_length := binary.BigEndian.Uint32(header[4:8])
+		fmt.Printf("type %d length %d \n", msg_type, msg_length)
 
-		if msg_type == OGRT.MessageType_value["ExecveMsg"] {
-			protodata := new(OGRT.Execve)
+		data := make([]byte, msg_length)
+		n, err = conn.Read(data)
+		if err == io.EOF {
+			fmt.Printf("Connection closed by remote end.\n")
+			return
+		} else if err != nil {
+			fmt.Printf("Connection closed unexpectedly after receiving %d bytes.\n", n)
+			fmt.Println(err)
+			return
+		}
 
-			err = proto.Unmarshal(data[0:n], protodata)
+		fmt.Printf("Decoding Protobuf message with size %d (advertised %d)\n", n, msg_length)
+
+		switch msg_type {
+		case OGRT.MessageType_value["ExecveMsg"]:
+			msg := new(OGRT.Execve)
+
+			err = proto.Unmarshal(data, msg)
 			if err != nil {
 				fmt.Println("error decoding")
 			}
+			fmt.Printf("Execve: %d -> %s \n", msg.GetPid(), msg.GetFilename())
+		case OGRT.MessageType_value["ForkMsg"]:
+			msg := new(OGRT.Fork)
 
-			//fmt.Println(protodata.GetPid())
-			//fmt.Println(protodata.GetFilename())
-			//for _, element := range protodata.GetEnvironmentVariables() {
-			//	fmt.Println(element)
-			//}
+			err = proto.Unmarshal(data, msg)
+			if err != nil {
+				fmt.Println("error decoding")
+			}
+			fmt.Printf("Fork: %d -> %d \n", msg.GetParentPid(), msg.GetChildPid())
 
-			//for _, element := range protodata.GetArguments() {
-			//	fmt.Println(element)
-			//}
 		}
 	}
 }
