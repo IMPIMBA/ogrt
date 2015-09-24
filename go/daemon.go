@@ -13,6 +13,8 @@ import (
 	"syscall"
 )
 
+var writer db.OGWriter
+
 func main() {
 	// Listen for incoming connections.
 	l, err := net.Listen("unix", "/tmp/ogrt.sock")
@@ -23,7 +25,9 @@ func main() {
 	// Close the listener when the application closes.
 	defer l.Close()
 
-	db.Connect()
+	writer = new(db.DBWriter)
+	writer.Connect()
+
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, os.Interrupt, os.Kill, syscall.SIGTERM)
 	go func(c chan os.Signal) {
@@ -95,7 +99,7 @@ func handleRequest(conn net.Conn) {
 				fmt.Println("error decoding")
 			}
 			fmt.Printf("Execve: %d -> %s \n", msg.GetPid(), msg.GetFilename())
-			db.Persist(int64(msg.GetPid()))
+			writer.Persist(int64(msg.GetPid()))
 		case OGRT.MessageType_value["ForkMsg"]:
 			msg := new(OGRT.Fork)
 
@@ -104,7 +108,7 @@ func handleRequest(conn net.Conn) {
 				fmt.Println("error decoding")
 			}
 			fmt.Printf("Fork: %d -> %d \n", msg.GetParentPid(), msg.GetChildPid())
-			db.Persist(int64(msg.GetParentPid()))
+			writer.Persist(int64(msg.GetParentPid()))
 		}
 	}
 }

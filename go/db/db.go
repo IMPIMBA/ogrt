@@ -6,6 +6,16 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type OGWriter interface {
+	Persist(int64)
+	Connect()
+}
+
+type DBWriter struct {
+	OGWriter
+	db *sqlx.DB
+}
+
 type PidInfo struct {
 	JobId          int64  `db:"jobid"`
 	Pid            int64  `db:"pid"`
@@ -15,11 +25,9 @@ type PidInfo struct {
 	ExecutablePath string `db:"exec_path"`
 }
 
-var db *sqlx.DB
-
-func Connect() {
+func (dbw *DBWriter) Connect() {
 	var err error
-	db, err = sqlx.Open("sqlite3", "./ogrt.db")
+	dbw.db, err = sqlx.Open("sqlite3", "./ogrt.db")
 	if err != nil {
 		fmt.Println("nope")
 	}
@@ -32,13 +40,14 @@ func Connect() {
 			uuid text,
 			exec_path text
 		);`
-	db.MustExec(schema)
-	fmt.Println(db)
+	dbw.db.MustExec(schema)
+	fmt.Printf("connect db: %s \n", dbw.db)
 }
 
-func Persist(pid int64) {
+func (dbw *DBWriter) Persist(pid int64) {
+	fmt.Printf("persist db: %s \n", dbw.db)
 	fmt.Printf("Persist %d \n", pid)
-	_, err := db.NamedExec("INSERT INTO pids (jobid, pid, pid_parent, hostname, uuid, exec_path) VALUES (:jobid, :pid, :pid_parent, :hostname, :uuid, :exec_path)", &PidInfo{1, pid, pid, "testhost", "uuid", "path"})
+	_, err := dbw.db.NamedExec("INSERT INTO pids (jobid, pid, pid_parent, hostname, uuid, exec_path) VALUES (:jobid, :pid, :pid_parent, :hostname, :uuid, :exec_path)", &PidInfo{1, pid, pid, "testhost", "uuid", "path"})
 	if err != nil {
 		fmt.Println(err)
 	}
