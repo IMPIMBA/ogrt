@@ -57,11 +57,11 @@ func main() {
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
 	fmt.Println("Handling packet...")
-	//Close the connection when the function exits
+	// Close the connection when the function exits
 	defer conn.Close()
-	//Create a data buffer of type byte slice with capacity of 16k
-	//Read the data waiting on the connection and put it in the data buffer
+	// Read the data waiting on the connection and put it in the data buffer
 	for {
+		// Read header from the connection
 		header := make([]byte, 8)
 		n, err := conn.Read(header)
 		if err == io.EOF {
@@ -73,10 +73,12 @@ func handleRequest(conn net.Conn) {
 			return
 		}
 
+		// Decode type and length of packet from header
 		msg_type := int32(binary.BigEndian.Uint32(header[0:4]))
 		msg_length := binary.BigEndian.Uint32(header[4:8])
 		fmt.Printf("type %d length %d \n", msg_type, msg_length)
 
+		// allocate a buffer as big as the payload and read the rest of the packet
 		data := make([]byte, msg_length)
 		n, err = conn.Read(data)
 		if err == io.EOF {

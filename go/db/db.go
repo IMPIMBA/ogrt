@@ -17,11 +17,9 @@ type DBWriter struct {
 }
 
 type PidInfo struct {
-	JobId          int64  `db:"jobid"`
 	Pid            int64  `db:"pid"`
 	PidParent      int64  `db:"pid_parent"`
 	Hostname       string `db:"hostname"`
-	UUID           string `db:"uuid"`
 	ExecutablePath string `db:"exec_path"`
 }
 
@@ -41,11 +39,9 @@ func (dbw *DBWriter) Connect() {
 			exec_path text
 		);`
 	dbw.db.MustExec(schema)
-	fmt.Printf("connect db: %s \n", dbw.db)
 }
 
 func (dbw *DBWriter) Persist(pid int64) {
-	fmt.Printf("persist db: %s \n", dbw.db)
 	fmt.Printf("Persist %d \n", pid)
 	_, err := dbw.db.NamedExec("INSERT INTO pids (jobid, pid, pid_parent, hostname, uuid, exec_path) VALUES (:jobid, :pid, :pid_parent, :hostname, :uuid, :exec_path)", &PidInfo{1, pid, pid, "testhost", "uuid", "path"})
 	if err != nil {
