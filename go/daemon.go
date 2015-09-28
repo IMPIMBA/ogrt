@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/georg-rath/ogrt/db"
 	"github.com/georg-rath/ogrt/messages"
 	"github.com/golang/protobuf/proto"
@@ -15,9 +16,21 @@ import (
 
 var writer db.OGWriter
 
+type Configuration struct {
+	Address string
+	Port    int
+}
+
 func main() {
+	var config Configuration
+	if _, err := toml.DecodeFile("ogrt.conf", &config); err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// Listen for incoming connections.
-	l, err := net.Listen("unix", "/tmp/ogrt.sock")
+	listen_string := fmt.Sprintf("%s:%d", config.Address, config.Port)
+	l, err := net.Listen("tcp", listen_string)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)

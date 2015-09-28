@@ -9,17 +9,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include "ogrt.h"
 
 /** macro for function hooking. shamelessly stolen from snoopy */
 #define FN(ptr, type, name, args)  ptr = (type (*)args)dlsym(RTLD_NEXT, name)
 
-#define SOCKET_PATH "/tmp/ogrt.sock"
-
-/* global variables */
-static bool  __ogrt_active   = 0;
+/** global variables */
+static bool  __ogrt_active   =  0;
 static int   __daemon_socket = -1;
-static pid_t __pid           = 0;
+static pid_t __pid           =  0;
 
 /**
  * Initialize preload library.
@@ -35,27 +34,49 @@ __attribute__((constructor)) static int init()
     __ogrt_active = true;
   }
   if(__ogrt_active && __daemon_socket < 0) {
-    __daemon_socket = socket(AF_UNIX, SOCK_STREAM, 0);
-    if(__daemon_socket < 0) {
-      perror("socket");
-      __ogrt_active = 0;
-      return 1;
-    }
-    struct sockaddr_un remote;
-    remote.sun_family = AF_UNIX;
-    strcpy(remote.sun_path, SOCKET_PATH);
-    if(connect(__daemon_socket, (struct sockaddr *)&remote, sizeof(remote.sun_family) + strlen(remote.sun_path)) < 0) {
-      fprintf(stderr, "OGRT_INITIALIZE: ");
-      perror("connect");
-      __ogrt_active = 0;
+    /* establish a connection the the ogrt server */
+    struct addrinfo hints, *servinfo, *p;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    int ret;
+    if ((ret = getaddrinfo(OGRT_NET_HOST, OGRT_NET_PORT, &hints, &servinfo)) != 0) {
+      fprintf(stderr, "OGRT: INITIALIZE: getaddrinfo: %s\n", gai_strerror(ret));
       return 1;
     }
 
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((__daemon_socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("OGRT: socket");
+            __ogrt_active = 0;
+            continue;
+        }
+
+        if (connect(__daemon_socket, p->ai_addr, p->ai_addrlen) == -1) {
+            close(__daemon_socket);
+            __ogrt_active = 0;
+            perror("OGRT: connect");
+            continue;
+        }
+
+        break;
+    }
+
+    if (p == NULL) {
+        fprintf(stderr, "OGRT: INITIALIZE: failed to connect.\n");
+        __ogrt_active = 0;
+        return 1;
+    }
+
+    freeaddrinfo(servinfo);
+
     fprintf(stderr, "OGRT: Connected to socket.\n");
+
     /* cache PID of current process - we are reusing that quite often */
     __pid = getpid();
 
-    fprintf(stderr, "OG be watchin' yo! (process %d with parent %d)\n", __pid, getppid());
+    fprintf(stderr, "OGRT: I be watchin' yo! (process %d with parent %d)\n", __pid, getppid());
   }
   return 0;
 }
@@ -71,7 +92,7 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     FN(unhooked_execve, int, "execve", (const char *, char **const, char **const));
   }
   if(__ogrt_active) {
-    fprintf(stderr, "I be execve: calling %s from %d\n", filename, __pid);
+    fprintf(stderr, "OGRT: I be execve: calling %s from %d\n", filename, __pid);
 
     /* Initialize the protobuf message, fill it, pack it and send it to the daemon */
     OGRT__Execve msg;
@@ -95,7 +116,6 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     msg.arguments = (char **)argv;
 
     size_t msg_len = ogrt__execve__get_packed_size(&msg);
-
     void *msg_serialized = NULL, *msg_buffer = NULL;
     int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ExecveMsg, msg_len, &msg_buffer, &msg_serialized);
 
@@ -124,7 +144,7 @@ int fork(void){
   int ret = (*unhooked_fork)();
   /* ignore parent process */
   if(__ogrt_active && ret != 0) {
-    fprintf(stderr, "I be fork: spawned %d from %d\n", ret, __pid);
+    fprintf(stderr, "OGRT: I be fork: spawned %d from %d\n", ret, __pid);
 
     /* Initialize the protobuf message, fill it, pack it and send it to the daemon */
     OGRT__Fork msg;
@@ -133,7 +153,6 @@ int fork(void){
     msg.child_pid = ret;
 
     size_t msg_len = ogrt__fork__get_packed_size(&msg);
-
     void *msg_serialized = NULL, *msg_buffer = NULL;
     int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ForkMsg, msg_len, &msg_buffer, &msg_serialized);
 
@@ -149,7 +168,7 @@ int fork(void){
 /**
  * Prepare send buffer for shipping to daemon.
  * Takes a message type and the length of the payload and return the beginning of
- * the buffer and the beginning of the payload.
+ * the buffer, the beginning of the payload and the total size of the buffer.
  * Message format:
  *       32bit            32bit                  up to 32bit length
  * +----------------+----------------+--------------------------------------------+
@@ -159,15 +178,16 @@ int fork(void){
  * This function is incredibly ugly. Should be reworked, but it works, right?
  */
 int ogrt_prepare_sendbuffer(const int message_type, const int payload_length, void **buffer, void **payload) {
-    int32_t type = htonl(message_type);
-    int32_t length = htonl(payload_length);
-    int total_length = payload_length + sizeof(type) + sizeof(length);
+  uint32_t type = htonl(message_type);
+  uint32_t length = htonl(payload_length);
+  int total_length = payload_length + sizeof(type) + sizeof(length);
 
-    *buffer = malloc(total_length);
-    *payload = (((char *)*buffer) + sizeof(type) + sizeof(length));
+  *buffer = malloc(total_length);
+  *payload = (((char *)*buffer) + sizeof(type) + sizeof(length));
 
-    memcpy(*buffer, &type, sizeof(type));
-    memcpy(*buffer + 4, &length, sizeof(length));
+  memcpy(*buffer, &type, sizeof(type));
+  memcpy(*buffer + 4, &length, sizeof(length));
 
-    return total_length;
+  return total_length;
 }
+

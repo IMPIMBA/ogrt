@@ -43,7 +43,7 @@ func (dbw *DBWriter) Connect() {
 
 func (dbw *DBWriter) Persist(pid int64) {
 	fmt.Printf("Persist %d \n", pid)
-	_, err := dbw.db.NamedExec("INSERT INTO pids (jobid, pid, pid_parent, hostname, uuid, exec_path) VALUES (:jobid, :pid, :pid_parent, :hostname, :uuid, :exec_path)", &PidInfo{1, pid, pid, "testhost", "uuid", "path"})
+	_, err := dbw.db.NamedExec("INSERT INTO pids (pid, pid_parent, hostname, exec_path) VALUES (:pid, :pid_parent, :hostname, :exec_path)", &PidInfo{pid, pid, "testhost", "path"})
 	if err != nil {
 		fmt.Println(err)
 	}
