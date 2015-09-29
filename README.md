@@ -31,6 +31,19 @@ This library should be very light by design. The only thing it should do
 is pack up arguments of the hooked functions into a protobuf and send
 them over the wire.
 
+
+#### Requirements
+
+For development:
+
+- Google Protocol Buffers (https://github.com/google/protobuf)
+- Protocol Buffers for C (https://github.com/protobuf-c/protobuf-c) compiled with PIC
+- libelf
+
+At runtime:
+
+- libelf (can not get it to build statically at the moment)
+
 ### ogrt_server
 
 Daemon written in Go.
@@ -49,9 +62,9 @@ signature. This is currently a work-in-progress and should not be used.
 
 ### tests
 
-Contains some testing programs. They are not really tests and are used
-by the author. They should be replaced by real tests.
+Contains some testing programs. These are not really tests and are used
+by the author. Should be replaced by real tests.
 
 ### scraps
 
-Contains some random stuff the author has been trying out. 
+Contains some OGRT-related stuff the author has been working on.
