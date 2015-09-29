@@ -17,7 +17,7 @@ int ogrt_read_info(const char *filename)
     GElf_Shdr shdr;
     size_t shstrndx;
     size_t offset = 0;
-    char buf[3];
+    char buf[38];
 
     if (elf_version(EV_CURRENT) == EV_NONE)
         errx(EXIT_FAILURE, "ELF library initialization failed: %s", elf_errmsg(-1));
@@ -52,7 +52,10 @@ int ogrt_read_info(const char *filename)
 
     if(offset != 0) {
       lseek(fd, offset, SEEK_SET);
-      read(fd, buf, 38);
+      int ret = read(fd, buf, 38);
+      if(ret != 38) {
+        err(EXIT_FAILURE, "read failed");
+      }
       printf("section contains: %s \n", buf);
       (void) close(fd);
       return 0;

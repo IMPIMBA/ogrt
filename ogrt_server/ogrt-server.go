@@ -114,6 +114,9 @@ func handleRequest(conn net.Conn) {
 				fmt.Println("error decoding")
 			}
 			fmt.Printf("Execve: %d -> %s \n", msg.GetPid(), msg.GetFilename())
+			for _, arg := range msg.GetArguments() {
+				fmt.Println(arg)
+			}
 			writer.Persist(int64(msg.GetPid()))
 		case OGRT.MessageType_value["ForkMsg"]:
 			msg := new(OGRT.Fork)
