@@ -1,3 +1,4 @@
-ogrt_preload/build
-ogrt_preload/lib
+ogrt-server/ogrt.db
+ogrt-preload/build
+ogrt-preload/lib
 _vendor

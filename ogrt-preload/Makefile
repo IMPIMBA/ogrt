@@ -26,7 +26,7 @@ OUTDIR=lib
 # files
 SOURCES=$(wildcard $(SRCDIR)/*.c)
 OBJECTS=$(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
-TARGET=ogrt_preload.so
+TARGET=ogrt-preload.so
 
 # utility functions
 dir_guard=@mkdir -p $(@D)

@@ -6,7 +6,7 @@ Tool to hook into glibc calls and track them.
 
 ## Project Structure
 
-### ogrt_preload
+### ogrt-preload
 
 Preload library written in C.
 
@@ -32,18 +32,18 @@ At runtime:
 
 - libelf (can not get it to build statically at the moment)
 
-### ogrt_server
+### ogrt-server
 
 Daemon written in Go.
 
 Receives protobuf messages from the preload library, does some preprocessing and persists
 them into a database.
 
-### ogrt_proto
+### ogrt-proto
 
 Contains the protobuf protocol definition.
 
-### ogrt_stamp
+### ogrt-stamp
 
 Contains a bash script that watermarks ('stamps') ELF binaries with an OGRT
 signature. This is currently a work-in-progress and should not be used.
