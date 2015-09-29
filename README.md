@@ -4,18 +4,6 @@
 
 Tool to hook into glibc calls and track them.
 
-## Requirements
-
-For development:
-
-- Google Protocol Buffers (https://github.com/google/protobuf)
-- Protocol Buffers for C (https://github.com/protobuf-c/protobuf-c) compiled with PIC
-- libelf
-
-For runtime:
-
-- libelf (can not get it to build statically at the moment)
-
 ## Project Structure
 
 ### ogrt_preload
