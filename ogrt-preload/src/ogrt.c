@@ -19,6 +19,7 @@
 static bool  __ogrt_active   =  0;
 static int   __daemon_socket = -1;
 static pid_t __pid           =  0;
+static pid_t __parent_pid           =  0;
 
 /**
  * Initialize preload library.
@@ -75,6 +76,7 @@ __attribute__((constructor)) static int init()
 
     /* cache PID of current process - we are reusing that quite often */
     __pid = getpid();
+    __parent_pid = getppid();
 
     fprintf(stderr, "OGRT: I be watchin' yo! (process %d with parent %d)\n", __pid, getppid());
   }
@@ -98,6 +100,7 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     OGRT__Execve msg;
     ogrt__execve__init(&msg);
     msg.pid = __pid;
+    msg.pid_parent = __parent_pid;
     msg.filename = strdup(filename);
 
     /* count number of environment variables and pass to message */

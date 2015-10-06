@@ -39,7 +39,7 @@ Daemon written in Go.
 Receives protobuf messages from the preload library, does some preprocessing and persists
 them into a database.
 
-### ogrt-proto
+### ogrt-protocol
 
 Contains the protobuf protocol definition.
 
