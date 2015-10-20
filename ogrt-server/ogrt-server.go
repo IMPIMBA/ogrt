@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/georg-rath/ogrt/db"
 	"github.com/georg-rath/ogrt/ogrt-protocol"
+	"github.com/georg-rath/ogrt/output"
 	"github.com/golang/protobuf/proto"
 	"io"
 	"log"
@@ -16,7 +16,7 @@ import (
 	"syscall"
 )
 
-var writer db.OGWriter
+var writer output.OGWriter
 var config Configuration
 
 type Configuration struct {
@@ -39,8 +39,8 @@ func main() {
 	// Close the listener when the application closes.
 	defer listener.Close()
 
-	writer = new(db.FileWriter)
-	writer.Connect()
+	writer = new(output.FileWriter)
+	writer.Open()
 
 	/* Setup signal handler for SIGKILL and SIGTERM */
 	sigc := make(chan os.Signal, 1)
