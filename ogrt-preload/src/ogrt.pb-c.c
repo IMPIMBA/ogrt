@@ -93,11 +93,23 @@ void   ogrt__execve__free_unpacked
   assert(message->base.descriptor == &ogrt__execve__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor ogrt__fork__field_descriptors[3] =
+static const ProtobufCFieldDescriptor ogrt__fork__field_descriptors[4] =
 {
   {
-    "parent_pid",
+    "hostname",
     1,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__Fork, hostname),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "parent_pid",
+    2,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_INT32,
     0,   /* quantifier_offset */
@@ -109,7 +121,7 @@ static const ProtobufCFieldDescriptor ogrt__fork__field_descriptors[3] =
   },
   {
     "child_pid",
-    2,
+    3,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_INT32,
     0,   /* quantifier_offset */
@@ -121,7 +133,7 @@ static const ProtobufCFieldDescriptor ogrt__fork__field_descriptors[3] =
   },
   {
     "name",
-    3,
+    4,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
@@ -133,14 +145,15 @@ static const ProtobufCFieldDescriptor ogrt__fork__field_descriptors[3] =
   },
 };
 static const unsigned ogrt__fork__field_indices_by_name[] = {
-  1,   /* field[1] = child_pid */
-  2,   /* field[2] = name */
-  0,   /* field[0] = parent_pid */
+  2,   /* field[2] = child_pid */
+  0,   /* field[0] = hostname */
+  3,   /* field[3] = name */
+  1,   /* field[1] = parent_pid */
 };
 static const ProtobufCIntRange ogrt__fork__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 3 }
+  { 0, 4 }
 };
 const ProtobufCMessageDescriptor ogrt__fork__descriptor =
 {
@@ -150,18 +163,30 @@ const ProtobufCMessageDescriptor ogrt__fork__descriptor =
   "OGRT__Fork",
   "OGRT",
   sizeof(OGRT__Fork),
-  3,
+  4,
   ogrt__fork__field_descriptors,
   ogrt__fork__field_indices_by_name,
   1,  ogrt__fork__number_ranges,
   (ProtobufCMessageInit) ogrt__fork__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[6] =
+static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[7] =
 {
   {
-    "pid",
+    "hostname",
     100,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__Execve, hostname),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "pid",
+    101,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_INT32,
     0,   /* quantifier_offset */
@@ -172,8 +197,20 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[6] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
+    "pid_parent",
+    102,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__Execve, pid_parent),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
     "filename",
-    101,
+    103,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
@@ -185,7 +222,7 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[6] =
   },
   {
     "arguments",
-    102,
+    104,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
     offsetof(OGRT__Execve, n_arguments),
@@ -197,7 +234,7 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[6] =
   },
   {
     "environment_variables",
-    103,
+    105,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
     offsetof(OGRT__Execve, n_environment_variables),
@@ -209,7 +246,7 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[6] =
   },
   {
     "uuid",
-    104,
+    106,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
@@ -219,31 +256,20 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[6] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
-  {
-    "pid_parent",
-    105,
-    PROTOBUF_C_LABEL_REQUIRED,
-    PROTOBUF_C_TYPE_INT32,
-    0,   /* quantifier_offset */
-    offsetof(OGRT__Execve, pid_parent),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
 };
 static const unsigned ogrt__execve__field_indices_by_name[] = {
-  2,   /* field[2] = arguments */
-  3,   /* field[3] = environment_variables */
-  1,   /* field[1] = filename */
-  0,   /* field[0] = pid */
-  5,   /* field[5] = pid_parent */
-  4,   /* field[4] = uuid */
+  4,   /* field[4] = arguments */
+  5,   /* field[5] = environment_variables */
+  3,   /* field[3] = filename */
+  0,   /* field[0] = hostname */
+  1,   /* field[1] = pid */
+  2,   /* field[2] = pid_parent */
+  6,   /* field[6] = uuid */
 };
 static const ProtobufCIntRange ogrt__execve__number_ranges[1 + 1] =
 {
   { 100, 0 },
-  { 0, 6 }
+  { 0, 7 }
 };
 const ProtobufCMessageDescriptor ogrt__execve__descriptor =
 {
@@ -253,7 +279,7 @@ const ProtobufCMessageDescriptor ogrt__execve__descriptor =
   "OGRT__Execve",
   "OGRT",
   sizeof(OGRT__Execve),
-  6,
+  7,
   ogrt__execve__field_descriptors,
   ogrt__execve__field_indices_by_name,
   1,  ogrt__execve__number_ranges,

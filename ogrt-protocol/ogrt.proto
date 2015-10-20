@@ -6,16 +6,18 @@ enum MessageType {
 }
 
 message Fork {
-  required int32 parent_pid = 1;
-  required int32 child_pid = 2;
-  optional string name = 3;
+  required string hostname = 1;
+  required int32 parent_pid = 2;
+  required int32 child_pid = 3;
+  optional string name = 4;
 }
 
 message Execve {
-  required int32 pid = 100;
-  required int32 pid_parent = 105;
-  required string filename = 101;
-  repeated string arguments = 102;
-  repeated string environment_variables = 103;
-  optional string uuid = 104;
+  required string hostname = 100;
+  required int32 pid = 101;
+  required int32 pid_parent = 102;
+  required string filename = 103;
+  repeated string arguments = 104;
+  repeated string environment_variables = 105;
+  optional string uuid = 106;
 }

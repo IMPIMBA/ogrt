@@ -32,18 +32,20 @@ typedef enum _OGRT__MessageType {
 struct  _OGRT__Fork
 {
   ProtobufCMessage base;
+  char *hostname;
   int32_t parent_pid;
   int32_t child_pid;
   char *name;
 };
 #define OGRT__FORK__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&ogrt__fork__descriptor) \
-    , 0, 0, NULL }
+    , NULL, 0, 0, NULL }
 
 
 struct  _OGRT__Execve
 {
   ProtobufCMessage base;
+  char *hostname;
   int32_t pid;
   int32_t pid_parent;
   char *filename;
@@ -55,7 +57,7 @@ struct  _OGRT__Execve
 };
 #define OGRT__EXECVE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&ogrt__execve__descriptor) \
-    , 0, 0, NULL, 0,NULL, 0,NULL, NULL }
+    , NULL, 0, 0, NULL, 0,NULL, 0,NULL, NULL }
 
 
 /* OGRT__Fork methods */

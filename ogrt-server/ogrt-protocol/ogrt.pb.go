@@ -55,15 +55,23 @@ func (x *MessageType) UnmarshalJSON(data []byte) error {
 }
 
 type Fork struct {
-	ParentPid        *int32  `protobuf:"varint,1,req,name=parent_pid" json:"parent_pid,omitempty"`
-	ChildPid         *int32  `protobuf:"varint,2,req,name=child_pid" json:"child_pid,omitempty"`
-	Name             *string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
+	Hostname         *string `protobuf:"bytes,1,req,name=hostname" json:"hostname,omitempty"`
+	ParentPid        *int32  `protobuf:"varint,2,req,name=parent_pid" json:"parent_pid,omitempty"`
+	ChildPid         *int32  `protobuf:"varint,3,req,name=child_pid" json:"child_pid,omitempty"`
+	Name             *string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *Fork) Reset()         { *m = Fork{} }
 func (m *Fork) String() string { return proto.CompactTextString(m) }
 func (*Fork) ProtoMessage()    {}
+
+func (m *Fork) GetHostname() string {
+	if m != nil && m.Hostname != nil {
+		return *m.Hostname
+	}
+	return ""
+}
 
 func (m *Fork) GetParentPid() int32 {
 	if m != nil && m.ParentPid != nil {
@@ -87,18 +95,26 @@ func (m *Fork) GetName() string {
 }
 
 type Execve struct {
-	Pid                  *int32   `protobuf:"varint,100,req,name=pid" json:"pid,omitempty"`
-	PidParent            *int32   `protobuf:"varint,105,req,name=pid_parent" json:"pid_parent,omitempty"`
-	Filename             *string  `protobuf:"bytes,101,req,name=filename" json:"filename,omitempty"`
-	Arguments            []string `protobuf:"bytes,102,rep,name=arguments" json:"arguments,omitempty"`
-	EnvironmentVariables []string `protobuf:"bytes,103,rep,name=environment_variables" json:"environment_variables,omitempty"`
-	Uuid                 *string  `protobuf:"bytes,104,opt,name=uuid" json:"uuid,omitempty"`
+	Hostname             *string  `protobuf:"bytes,100,req,name=hostname" json:"hostname,omitempty"`
+	Pid                  *int32   `protobuf:"varint,101,req,name=pid" json:"pid,omitempty"`
+	PidParent            *int32   `protobuf:"varint,102,req,name=pid_parent" json:"pid_parent,omitempty"`
+	Filename             *string  `protobuf:"bytes,103,req,name=filename" json:"filename,omitempty"`
+	Arguments            []string `protobuf:"bytes,104,rep,name=arguments" json:"arguments,omitempty"`
+	EnvironmentVariables []string `protobuf:"bytes,105,rep,name=environment_variables" json:"environment_variables,omitempty"`
+	Uuid                 *string  `protobuf:"bytes,106,opt,name=uuid" json:"uuid,omitempty"`
 	XXX_unrecognized     []byte   `json:"-"`
 }
 
 func (m *Execve) Reset()         { *m = Execve{} }
 func (m *Execve) String() string { return proto.CompactTextString(m) }
 func (*Execve) ProtoMessage()    {}
+
+func (m *Execve) GetHostname() string {
+	if m != nil && m.Hostname != nil {
+		return *m.Hostname
+	}
+	return ""
+}
 
 func (m *Execve) GetPid() int32 {
 	if m != nil && m.Pid != nil {
