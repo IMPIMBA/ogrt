@@ -37,3 +37,7 @@ func (dbw *DBWriter) Persist(pid int64, parentPid int64, msg_type string, exec s
 	}
 
 }
+
+func (dbw *DBWriter) Close() {
+	dbw.db.Close()
+}
