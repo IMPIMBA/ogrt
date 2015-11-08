@@ -15,7 +15,7 @@ message Fork {
 message Execve {
   required string hostname = 100;
   required int32 pid = 101;
-  required int32 pid_parent = 102;
+  required int32 parent_pid = 102;
   required string filename = 103;
   repeated string arguments = 104;
   repeated string environment_variables = 105;

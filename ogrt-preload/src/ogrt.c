@@ -107,7 +107,7 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     ogrt__execve__init(&msg);
     msg.hostname = strdup(__hostname);
     msg.pid = __pid;
-    msg.pid_parent = __parent_pid;
+    msg.parent_pid = __parent_pid;
     msg.filename = strdup(filename);
 
     /* count number of environment variables and pass to message */

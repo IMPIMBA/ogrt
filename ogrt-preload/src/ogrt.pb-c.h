@@ -47,7 +47,7 @@ struct  _OGRT__Execve
   ProtobufCMessage base;
   char *hostname;
   int32_t pid;
-  int32_t pid_parent;
+  int32_t parent_pid;
   char *filename;
   size_t n_arguments;
   char **arguments;

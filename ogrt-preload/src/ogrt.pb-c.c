@@ -197,12 +197,12 @@ static const ProtobufCFieldDescriptor ogrt__execve__field_descriptors[7] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "pid_parent",
+    "parent_pid",
     102,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_INT32,
     0,   /* quantifier_offset */
-    offsetof(OGRT__Execve, pid_parent),
+    offsetof(OGRT__Execve, parent_pid),
     NULL,
     NULL,
     0,             /* flags */
@@ -262,8 +262,8 @@ static const unsigned ogrt__execve__field_indices_by_name[] = {
   5,   /* field[5] = environment_variables */
   3,   /* field[3] = filename */
   0,   /* field[0] = hostname */
+  2,   /* field[2] = parent_pid */
   1,   /* field[1] = pid */
-  2,   /* field[2] = pid_parent */
   6,   /* field[6] = uuid */
 };
 static const ProtobufCIntRange ogrt__execve__number_ranges[1 + 1] =

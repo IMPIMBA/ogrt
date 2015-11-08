@@ -97,7 +97,7 @@ func (m *Fork) GetName() string {
 type Execve struct {
 	Hostname             *string  `protobuf:"bytes,100,req,name=hostname" json:"hostname,omitempty"`
 	Pid                  *int32   `protobuf:"varint,101,req,name=pid" json:"pid,omitempty"`
-	PidParent            *int32   `protobuf:"varint,102,req,name=pid_parent" json:"pid_parent,omitempty"`
+	ParentPid            *int32   `protobuf:"varint,102,req,name=parent_pid" json:"parent_pid,omitempty"`
 	Filename             *string  `protobuf:"bytes,103,req,name=filename" json:"filename,omitempty"`
 	Arguments            []string `protobuf:"bytes,104,rep,name=arguments" json:"arguments,omitempty"`
 	EnvironmentVariables []string `protobuf:"bytes,105,rep,name=environment_variables" json:"environment_variables,omitempty"`
@@ -123,9 +123,9 @@ func (m *Execve) GetPid() int32 {
 	return 0
 }
 
-func (m *Execve) GetPidParent() int32 {
-	if m != nil && m.PidParent != nil {
-		return *m.PidParent
+func (m *Execve) GetParentPid() int32 {
+	if m != nil && m.ParentPid != nil {
+		return *m.ParentPid
 	}
 	return 0
 }
