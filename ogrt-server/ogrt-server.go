@@ -41,6 +41,7 @@ func main() {
 
 	writer = new(output.FileWriter)
 	writer.Open()
+	defer writer.Close()
 
 	/* Setup signal handler for SIGKILL and SIGTERM */
 	sigc := make(chan os.Signal, 1)
@@ -49,6 +50,7 @@ func main() {
 		sig := <-c
 		log.Printf("Caught signal %s: shutting down.\n", sig)
 		listener.Close()
+		writer.Close()
 		os.Exit(0)
 	}(sigc)
 
@@ -117,7 +119,7 @@ func handleRequest(conn net.Conn) {
 			}
 			args := strings.Join(msg.GetArguments(), " ")
 			log.Printf("Execve: %d -> %s (%s)", msg.GetPid(), msg.GetFilename(), args)
-			writer.Persist(int64(msg.GetPid()), int64(msg.GetPidParent()), "localhost", msg.GetFilename())
+			writer.Persist(int64(msg.GetPid()), int64(msg.GetParentPid()), "localhost", msg.GetFilename())
 		case OGRT.MessageType_value["ForkMsg"]:
 			msg := new(OGRT.Fork)
 
