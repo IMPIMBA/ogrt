@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "ogrt.h"
+
+#define OGRT_SECTION_NAME (".blah")
 
 int ogrt_read_info(const char *filename)
 {
@@ -17,6 +18,7 @@ int ogrt_read_info(const char *filename)
     GElf_Shdr shdr;
     size_t shstrndx;
     size_t offset = 0;
+    size_t offset_dynamic = 0;
     char buf[38];
 
     if (elf_version(EV_CURRENT) == EV_NONE)
@@ -46,6 +48,22 @@ int ogrt_read_info(const char *filename)
           printf("OGRT section found! \n");
           offset = shdr.sh_offset;
         }
+        if(shdr.sh_type == SHT_DYNAMIC) {
+          printf("Dynamic section found. \n");
+          Elf_Data *data = NULL;
+          GElf_Dyn dyn;
+          while ((data = elf_getdata(scn, data)) != NULL) {
+            for(int i_dyn = 0; gelf_getdyn(data, i_dyn, &dyn) != NULL && dyn.d_tag != DT_NULL; i_dyn++) {
+              printf("%d: %ld\n", i_dyn, dyn.d_tag);
+              if(dyn.d_tag == DT_NEEDED) {
+                printf("l: %s\n", elf_strptr(e, shdr.sh_link, dyn.d_un.d_ptr));
+              }
+            }
+          }
+          printf("yo\n");
+          exit(1);
+        }
+        printf("%s\n", name);
     }
 
     (void) elf_end(e);
