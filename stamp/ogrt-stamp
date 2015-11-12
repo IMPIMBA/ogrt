@@ -4,9 +4,28 @@ set -euo pipefail
 
 file=${1:-}
 
-STAMP_FILE=$(mktemp)
+STAMP_ASSEMBLY=$(mktemp)
+STAMP_ELF=$(mktemp)
+STAMP_BINARY=$(mktemp)
+
 STAMP_VERSION="00"
 UUID=$(uuidgen -r)
-echo -ne "$STAMP_VERSION\\00$UUID\\00" > "$STAMP_FILE"
-objcopy --add-section ".note.ogrt.info=$STAMP_FILE" "$file" "$(basename "$file").stamped"
+
+/bin/cat <<EOA > $STAMP_ASSEMBLY
+    .section ".note.ogrt.info", "a"
+    .p2align 2
+    .long 1f - 0f           # name size (not including padding)
+    .long 3f - 2f           # desc size (not including padding)
+    .long 0x4F475254        # type
+0:  .asciz "OGRT"     # name
+1:  .p2align 2
+2:  .asciz "leaving a mark..."        # desc
+3:  .p2align 2
+EOA
+
+as -o "$STAMP_ELF" "$STAMP_ASSEMBLY"
+objcopy -O binary "$STAMP_ELF" "$STAMP_BINARY"
+objcopy --add-section ".note.ogrt.info=$STAMP_BINARY" "$file" "$(basename "$file").stamped"
 echo "Wrote $(basename "$file").stamped with OGRT signature."
+
+rm "$STAMP_ASSEMBLY" "$STAMP_ELF" "$STAMP_BINARY"

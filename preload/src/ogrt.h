@@ -12,6 +12,7 @@
 
 /** function prototypes */
 int ogrt_read_info(const char *filename);
+int ogrt_read_info();
 int ogrt_prepare_sendbuffer(const int message_type, const int message_length, void **buffer_begin, void **payload);
 
 #endif
