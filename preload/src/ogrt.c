@@ -36,6 +36,10 @@ __attribute__((constructor)) static int init()
     __ogrt_active = true;
   }
   if(__ogrt_active && __daemon_socket < 0) {
+    ogrt_get_loaded_so();
+    __ogrt_active = false;
+    return 1;
+
     /* establish a connection the the ogrt server */
     struct addrinfo hints, *servinfo, *p;
     memset(&hints, 0, sizeof hints);
@@ -45,19 +49,20 @@ __attribute__((constructor)) static int init()
     int ret;
     if ((ret = getaddrinfo(OGRT_NET_HOST, OGRT_NET_PORT, &hints, &servinfo)) != 0) {
       fprintf(stderr, "OGRT: INITIALIZE: getaddrinfo: %s\n", gai_strerror(ret));
+      __ogrt_active = false;
       return 1;
     }
 
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((__daemon_socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("OGRT: socket");
-            __ogrt_active = 0;
+            __ogrt_active = false;
             continue;
         }
 
         if (connect(__daemon_socket, p->ai_addr, p->ai_addrlen) == -1) {
             close(__daemon_socket);
-            __ogrt_active = 0;
+            __ogrt_active = false;
             perror("OGRT: connect");
             continue;
         }
@@ -67,7 +72,7 @@ __attribute__((constructor)) static int init()
 
     if (p == NULL) {
         fprintf(stderr, "OGRT: INITIALIZE: failed to connect.\n");
-        __ogrt_active = 0;
+        __ogrt_active = false;
         return 1;
     }
 
@@ -80,12 +85,13 @@ __attribute__((constructor)) static int init()
     __parent_pid = getppid();
     if(gethostname(__hostname, HOST_NAME_MAX) != 0) {
       fprintf(stderr, "OGRT: Failed to get hostname\n");
-      __ogrt_active = 0;
+      __ogrt_active = false;
       return 1;
     }
 
     fprintf(stderr, "OGRT: I be watchin' yo! (process %d with parent %d)\n", __pid, getppid());
   }
+
   return 0;
 }
 

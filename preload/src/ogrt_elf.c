@@ -8,55 +8,57 @@
 #include <unistd.h>
 #include <string.h>
 #include <link.h>
+#include <errno.h>
+#include "ogrt.h"
 
-#define OGRT_SECTION_NAME (".note.ogrt.info")
+extern char *program_invocation_name;
 
-int walk(char *p) {
+typedef struct so_info {
+  char *path;
+  void *stamp;
+} so_info;
+
+/**
+ * Read a "vendor specific ELF note".
+ * Only documentation I could find: http://www.netbsd.org/docs/kernel/elf-notes.html
+ * Takes a pointer to the beginning of the note and returns the total size of the note.
+ */
+int read_note(const char *p) {
   int32_t name_size = *((int32_t *)p);
   int32_t desc_size = *((int32_t *)(p+4));
   int32_t type      = *((int32_t *)(p+8));
-  char *name         = p+12;
-  char *desc         = p+12+(name_size)+(4-(name_size%4));
+  char *name         = (char *)p+12;
+  char *desc         = (char *)p+12+(name_size)+(4-(name_size%4));
 
-  if(type == 0x4f475254) {
-    printf("\nname=%p - size=%d, desc=%p - size=%d\n", (void *)name, name_size, (void *)desc, desc_size);
-    printf("ogrt: %s\n", desc);
-    for(int i=0; i < desc_size; i++){
-      printf("%c", *(desc+i));
-    }
+  if(type == OGRT_ELF_NOTE_TYPE) {
+    fprintf(stderr, "OGRT: found stamp with content: %s\n", desc);
   }
 
-#if 0
-  printf("%d: %s; hex: ", name_size, name);
-  printf("\nname=%p - size=%d, desc=%p - size=%d\n", (void *)name, name_size, (void *)desc, desc_size);
-  for(int i=0; i < desc_size; i++){
-    printf("%x", *(desc+i));
-  }
-  printf("\n");
-#endif
   return desc_size+name_size+12;
 }
 
-int
-callback(struct dl_phdr_info *info, size_t size, void *data)
+int handle_program_header(struct dl_phdr_info *info, size_t size, void *data)
 {
-  int j;
-
+  if(strlen(info->dlpi_name) > 0) {
+    fprintf(stderr, "OGRT: \t\t %s\n", info->dlpi_name);
+  }
+#ifdef OGRT_DEBUG
   printf("name=%s (%d segments)\n", info->dlpi_name,info->dlpi_phnum);
-
-  for (j = 0; j < info->dlpi_phnum; j++){
+#endif
+  for (int j = 0; j < info->dlpi_phnum; j++){
+#ifdef OGRT_DEBUG
       printf("\t\t header %2d: address=%10p a=%10p s=%ld\n", j, (void *) (info->dlpi_addr + info->dlpi_phdr[j].p_vaddr), (void *)info->dlpi_addr, info->dlpi_phdr[j].p_filesz);
+#endif
       GElf_Phdr *program_header= (GElf_Phdr *)&(info->dlpi_phdr[j]);
-      if(program_header->p_type != PT_NULL && program_header->p_type == PT_DYNAMIC) {
-        printf("DYN");
-      }
       if(program_header->p_type != PT_NULL && program_header->p_type == PT_NOTE) {
+#ifdef OGRT_DEBUG
         printf("NOTE");
-        char *p = info->dlpi_addr + program_header->p_vaddr;
-        if(p != NULL) {
-          int i = 0;
-          while(i < program_header->p_memsz) {
-            i += walk(p+i);
+#endif
+        char *notes = (char *)(info->dlpi_addr + program_header->p_vaddr);
+        if(notes != NULL) {
+          u_int offset = 0;
+          while(offset < program_header->p_memsz) {
+            offset += read_note(notes + offset);
           }
         }
       }
@@ -64,11 +66,13 @@ callback(struct dl_phdr_info *info, size_t size, void *data)
   return 0;
 }
 
-int ogrt_get_loaded_so()
+void ogrt_get_loaded_so()
 {
-  dl_iterate_phdr(callback, NULL);
+  fprintf(stderr, "OGRT: Displaying loaded libraries for pid %d (%s):\n", getpid(), program_invocation_name);
+  dl_iterate_phdr(handle_program_header, NULL);
 }
 
+#if 0
 int ogrt_read_info(const char *filename)
 {
     int fd;
@@ -126,3 +130,4 @@ int ogrt_read_info(const char *filename)
     (void) elf_end(elf);
     return 0;
 }
+#endif
