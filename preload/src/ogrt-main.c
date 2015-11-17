@@ -1,16 +1,5 @@
-#define _GNU_SOURCE
-#include <dlfcn.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include "ogrt.h"
+#include "ogrt-main.h"
+#include "ogrt-log.h"
 
 /** macro for function hooking. shamelessly stolen from snoopy */
 #define FN(ptr, type, name, args)  ptr = (type (*)args)dlsym(RTLD_NEXT, name)

@@ -11,7 +11,7 @@
 
 # libraries
 STATIC_LIBS=-lprotobuf-c
-SHARED_LIBS=-ldl -lelf #FIXME: libelf should be linked statically
+SHARED_LIBS=-ldl -luuid #TODO: libuuid should be static
 
 # compiler/linker flags
 CC=gcc
