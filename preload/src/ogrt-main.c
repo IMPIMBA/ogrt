@@ -25,10 +25,6 @@ __attribute__((constructor)) static int init()
     __ogrt_active = true;
   }
   if(__ogrt_active && __daemon_socket < 0) {
-    ogrt_get_loaded_so();
-    __ogrt_active = false;
-    return 1;
-
     /* establish a connection the the ogrt server */
     struct addrinfo hints, *servinfo, *p;
     memset(&hints, 0, sizeof hints);
@@ -78,6 +74,12 @@ __attribute__((constructor)) static int init()
       return 1;
     }
 
+    void *so_info = ogrt_get_loaded_so();
+    int32_t *so_info_size = ((int32_t *)so_info);
+    OGRT__SharedObject *shared_object = (OGRT__SharedObject *)(so_info_size + 2);
+    for(int i = 0; i < *so_info_size; i++) {
+      ogrt_log_debug("[D] shared object path=%s, signature=%s\n", shared_object[i].path, shared_object[i].signature);
+    }
     fprintf(stderr, "OGRT: I be watchin' yo! (process %d with parent %d)\n", __pid, getppid());
   }
 

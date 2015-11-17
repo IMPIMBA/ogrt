@@ -5,13 +5,12 @@
 # Try to link in dependencies statically for easier deployment.
 #
 # Dependencies:
-# 	libelf
 # 	libprotobuf-c
 ###
 
 # libraries
 STATIC_LIBS=-lprotobuf-c
-SHARED_LIBS=-ldl -luuid #TODO: libuuid should be static
+SHARED_LIBS=-ldl
 
 # compiler/linker flags
 CC=gcc

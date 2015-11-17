@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "ogrt.pb-c.h"
+#include "ogrt-readso.h"
 
 /* debug settings */
 #define OGRT_DEBUG

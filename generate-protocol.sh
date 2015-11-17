@@ -9,10 +9,10 @@ function is_available() {
 is_available "protoc"
 is_available "protoc-c"
 
-protoc --go_out ogrt-server/ ogrt-protocol/ogrt.proto
-protoc-c --c_out ogrt-preload/src/ ogrt-protocol/ogrt.proto
+protoc --go_out server/ protocol/ogrt.proto
+protoc-c --c_out preload/src/ protocol/ogrt.proto
 
 # copy C source into right location
-mv ogrt-preload/src/ogrt-protocol/* ogrt-preload/src/
-rmdir  ogrt-preload/src/ogrt-protocol
-sed -i 's|#include "ogrt-protocol/ogrt.pb-c.h"|#include "ogrt.pb-c.h"|' ogrt-preload/src/ogrt.pb-c.c
+mv preload/src/protocol/* preload/src/
+rmdir  preload/src/protocol
+sed -i 's|#include "protocol/ogrt.pb-c.h"|#include "ogrt.pb-c.h"|' preload/src/ogrt.pb-c.c

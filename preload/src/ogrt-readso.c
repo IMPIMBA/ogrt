@@ -1,32 +1,32 @@
 #include "ogrt-readso.h"
 
-typedef struct so_info {
+/* typedef struct so_info {
   char *path;
   uuid_t signature;
-} so_info;
+} so_info; */
 
 /**
  * Read a "vendor specific ELF note".
  * Only documentation I could find: http://www.netbsd.org/docs/kernel/elf-notes.html
  */
-int read_note(const char *note, char *ret_version, uuid_t ret_uuid) {
+int read_signature(const char *note, char *ret_version, char **ret_signature) {
   int32_t name_size = *((int32_t *)note);
   int32_t desc_size = *((int32_t *)(note+4));
   int32_t type      = *((int32_t *)(note+8));
-  char *name         = (char *)note+12;
+  __attribute__((unused)) char *name         = (char *)note+12;
   char *version      = (char *)note+12+(name_size)+(4-(name_size%4));
   char *uuid_str         = version+1;
 
   if(type == OGRT_ELF_NOTE_TYPE && *version == OGRT_STAMP_SUPPORTED_VERSION) {
-    ogrt_log_debug("\n[D] found signature %s!", uuid_str);
+    ogrt_log_debug("\n[D] found signature %s (%10p)!", uuid_str, uuid_str);
     *ret_version = *version;
-    uuid_parse(uuid_str, ret_uuid);
+    *ret_signature = strdup(uuid_str);
   }
 
   return desc_size+name_size+12;
 }
 
-int handle_program_header(struct dl_phdr_info *info, size_t size, void *data)
+int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size_t size, void *data)
 {
   char *so_name = NULL;
   if(strlen(info->dlpi_name) > 0) {
@@ -40,10 +40,11 @@ int handle_program_header(struct dl_phdr_info *info, size_t size, void *data)
 
   int32_t *so_info_size = ((int32_t *)data);
   int32_t *so_info_index = ((int32_t *)data) + 1;
-  so_info *so_infos = (so_info *)(so_info_index + 1);
+  OGRT__SharedObject *so_infos = (OGRT__SharedObject *)(so_info_size + 2);
 
   ogrt_log_debug("[D] so_info: size %d, index %d\n", *so_info_size, *so_info_index);
-  (*so_info_index)++;
+  ogrt_log_debug("[D] so_info: size %10p, index %10p\n", so_info_size, so_info_index);
+
   for (int j = 0; j < info->dlpi_phnum; j++){
       ogrt_log_debug("[D]\t\theader %2d: address=%10p phys=%10p size=%ld", j, (void *) (info->dlpi_addr + info->dlpi_phdr[j].p_vaddr), (void *)info->dlpi_addr, info->dlpi_phdr[j].p_filesz);
 
@@ -54,32 +55,31 @@ int handle_program_header(struct dl_phdr_info *info, size_t size, void *data)
         char *notes = (char *)(info->dlpi_addr + program_header->p_vaddr);
         if(notes != NULL) {
           u_int offset = 0;
+          OGRT__SharedObject *shared_object = &(so_infos[*so_info_index]);
+          ogrt__shared_object__init(shared_object);
+          char version = 0;
+          char *signature = NULL;
           while(offset < program_header->p_memsz) {
-            uuid_t uuid;
-            uuid_clear(uuid);
-            char version = 0;
-            offset += read_note(notes + offset, &version, uuid);
-            uuid_copy(so_infos[*so_info_index].signature, uuid);
-            so_infos[*so_info_index].path = so_name;
+            offset += read_signature(notes + offset, &version, &signature);
+            shared_object->path = strdup(so_name);
+            shared_object->signature = signature;
           }
         }
       }
 
       ogrt_log_debug("\n");
   }
+  (*so_info_index)++;
   return 0;
 }
 
-int count_program_header(struct dl_phdr_info *info, __attribute__((unused)) size_t size, void *data) {
+int count_program_header(__attribute__((unused)) struct dl_phdr_info *info, __attribute__((unused)) size_t size, void *data) {
   uint32_t *count = data;
   (*count)++;
   ogrt_log_debug("[D] so_count: %u\n", *count);
   return 0;
 }
 
-uuid_t ogrt_get_process_signature() {
-  
-}
 
 void *ogrt_get_loaded_so()
 {
@@ -89,7 +89,8 @@ void *ogrt_get_loaded_so()
   dl_iterate_phdr(count_program_header, (void *)&so_count);
   ogrt_log_debug("[D] Total so_count: %u\n", so_count);
 
-  void *infos = malloc(sizeof(so_info) * so_count + sizeof(int32_t) * 2);
+  ogrt_log_debug("[D] sizeof(OGRT__SharedObject)=%d\n", sizeof(OGRT__SharedObject));
+  void *infos = malloc(sizeof(OGRT__SharedObject) * so_count + sizeof(int32_t) * 2);
   int32_t *so_info_size = ((int32_t *)infos);
   int32_t *so_info_index = ((int32_t *)infos) + 1;
   *so_info_size = so_count;
