@@ -25,6 +25,7 @@ OUTDIR=lib
 # files
 SOURCES=$(wildcard $(SRCDIR)/*.c)
 OBJECTS=$(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
+STAMP=$(SRCDIR)/stamp.s
 TARGET=ogrt-preload.so
 
 # utility functions
@@ -35,7 +36,8 @@ all: $(OUTDIR)/$(TARGET)
 
 $(OUTDIR)/$(TARGET): $(OBJECTS)
 	$(dir_guard)
-	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
+	@sed -i s/@@UUID@@/$(shell uuidgen)/ $(STAMP)
+	$(CC) $(OBJECTS) $(STAMP) -o $@ $(LDFLAGS)
 
 $(OBJECTS): $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 	$(dir_guard)
