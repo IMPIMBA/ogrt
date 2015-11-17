@@ -6,6 +6,6 @@
 0:  .asciz "OG"     # name
 1:  .p2align 2
 2:  .byte  0x01 #version
-    .asciz "f9ff3f9b-93dc-46f6-b994-5e0f4024b371"        # uuid
+    .asciz "33db3477-1465-459b-a4d7-b74c46e8c2c1"        # uuid
 3:  .p2align 2
 
