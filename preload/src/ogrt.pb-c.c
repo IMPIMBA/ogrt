@@ -418,11 +418,23 @@ const ProtobufCMessageDescriptor ogrt__shared_object__descriptor =
   (ProtobufCMessageInit) ogrt__shared_object__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[5] =
+static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[7] =
 {
   {
-    "pid",
+    "binpath",
     300,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__ProcessInfo, binpath),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "pid",
+    301,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_INT32,
     0,   /* quantifier_offset */
@@ -434,7 +446,7 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[5] =
   },
   {
     "parent_pid",
-    301,
+    302,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_INT32,
     0,   /* quantifier_offset */
@@ -446,7 +458,7 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[5] =
   },
   {
     "time",
-    302,
+    303,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_INT64,
     0,   /* quantifier_offset */
@@ -457,8 +469,20 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[5] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
+    "signature",
+    304,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__ProcessInfo, signature),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
     "environment_variables",
-    303,
+    305,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
     offsetof(OGRT__ProcessInfo, n_environment_variables),
@@ -470,7 +494,7 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[5] =
   },
   {
     "shared_object",
-    304,
+    306,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
     offsetof(OGRT__ProcessInfo, n_shared_object),
@@ -482,16 +506,18 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[5] =
   },
 };
 static const unsigned ogrt__process_info__field_indices_by_name[] = {
-  3,   /* field[3] = environment_variables */
-  1,   /* field[1] = parent_pid */
-  0,   /* field[0] = pid */
-  4,   /* field[4] = shared_object */
-  2,   /* field[2] = time */
+  0,   /* field[0] = binpath */
+  5,   /* field[5] = environment_variables */
+  2,   /* field[2] = parent_pid */
+  1,   /* field[1] = pid */
+  6,   /* field[6] = shared_object */
+  4,   /* field[4] = signature */
+  3,   /* field[3] = time */
 };
 static const ProtobufCIntRange ogrt__process_info__number_ranges[1 + 1] =
 {
   { 300, 0 },
-  { 0, 5 }
+  { 0, 7 }
 };
 const ProtobufCMessageDescriptor ogrt__process_info__descriptor =
 {
@@ -501,7 +527,7 @@ const ProtobufCMessageDescriptor ogrt__process_info__descriptor =
   "OGRT__ProcessInfo",
   "OGRT",
   sizeof(OGRT__ProcessInfo),
-  5,
+  7,
   ogrt__process_info__field_descriptors,
   ogrt__process_info__field_indices_by_name,
   1,  ogrt__process_info__number_ranges,

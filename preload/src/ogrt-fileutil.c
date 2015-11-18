@@ -36,6 +36,7 @@ char *ogrt_get_binpath(const pid_t pid) {
      return NULL;
   }
 
+  bin_path[len] = '\0';
   return bin_path;
 }
 

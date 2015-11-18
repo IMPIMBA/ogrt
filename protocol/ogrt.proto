@@ -25,11 +25,13 @@ message SharedObject {
 }
 
 message ProcessInfo {
-  required int32 pid = 300;
-  required int32 parent_pid = 301;
-  required int64 time = 302;
-  repeated string environment_variables = 303;
-  repeated SharedObject shared_object = 304;
+  required string binpath = 300;
+  required int32 pid = 301;
+  required int32 parent_pid = 302;
+  required int64 time = 303;
+  optional string signature = 304;
+  repeated string environment_variables = 305;
+  repeated SharedObject shared_object = 306;
 }
 
 message Fork {

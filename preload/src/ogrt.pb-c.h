@@ -73,9 +73,11 @@ struct  _OGRT__SharedObject
 struct  _OGRT__ProcessInfo
 {
   ProtobufCMessage base;
+  char *binpath;
   int32_t pid;
   int32_t parent_pid;
   int64_t time;
+  char *signature;
   size_t n_environment_variables;
   char **environment_variables;
   size_t n_shared_object;
@@ -83,7 +85,7 @@ struct  _OGRT__ProcessInfo
 };
 #define OGRT__PROCESS_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&ogrt__process_info__descriptor) \
-    , 0, 0, 0, 0,NULL, 0,NULL }
+    , NULL, 0, 0, 0, NULL, 0,NULL, 0,NULL }
 
 
 struct  _OGRT__Fork

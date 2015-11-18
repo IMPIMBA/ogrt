@@ -13,11 +13,12 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <time.h>
 #include "ogrt.pb-c.h"
 #include "ogrt-readso.h"
 
 /* debug settings */
-#define OGRT_DEBUG
+//#define OGRT_DEBUG
 
 /** network configuration */
 #define OGRT_NET_HOST     ("localhost")

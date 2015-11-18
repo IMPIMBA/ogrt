@@ -4,15 +4,15 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	//	"github.com/georg-rath/ogrt/ogrt-protocol"
 	"github.com/georg-rath/ogrt/output"
-	//	"github.com/golang/protobuf/proto"
+	"github.com/georg-rath/ogrt/protocol"
+	"github.com/golang/protobuf/proto"
 	"io"
 	"log"
 	"net"
 	"os"
 	"os/signal"
-	//	"strings"
+	"strings"
 	"syscall"
 )
 
@@ -107,30 +107,43 @@ func handleRequest(conn net.Conn) {
 		}
 
 		log.Printf("Decoding Protobuf message with size %d (advertised %d)\n", n, msg_length)
-		/*
-			switch msg_type {
-			case OGRT.MessageType_value["ExecveMsg"]:
-				msg := new(OGRT.Execve)
 
-				err = proto.Unmarshal(data, msg)
-				if err != nil {
-					log.Printf("Error decoding ExecveMsg: %s\n", err)
-					continue
-				}
-				args := strings.Join(msg.GetArguments(), " ")
-				log.Printf("Execve: %d -> %s (%s)", msg.GetPid(), msg.GetFilename(), args)
-				writer.Persist(int64(msg.GetPid()), int64(msg.GetParentPid()), "localhost", msg.GetFilename())
-			case OGRT.MessageType_value["ForkMsg"]:
-				msg := new(OGRT.Fork)
+		switch msg_type {
+		case OGRT.MessageType_value["ProcessInfoMsg"]:
+			msg := new(OGRT.ProcessInfo)
 
-				err = proto.Unmarshal(data, msg)
-				if err != nil {
-					log.Printf("Error decoding ExecveMsg: %s\n", err)
-					continue
-				}
-				log.Printf("Fork: %d -> %d \n", msg.GetParentPid(), msg.GetChildPid())
-				//	writer.Persist(int64(msg.GetParentPid()))
+			err = proto.Unmarshal(data, msg)
+			if err != nil {
+				log.Printf("Error decoding ExecveMsg: %s\n", err)
+				continue
 			}
-		*/
+
+			log.Printf("bin: name=%s, signature=%s", msg.GetBinpath(), msg.GetSignature())
+			for _, so := range msg.GetSharedObject() {
+				log.Printf("\tso: name=%s, signature=%s", so.GetPath(), so.GetSignature())
+			}
+		case OGRT.MessageType_value["ExecveMsg"]:
+			msg := new(OGRT.Execve)
+
+			err = proto.Unmarshal(data, msg)
+			if err != nil {
+				log.Printf("Error decoding ExecveMsg: %s\n", err)
+				continue
+			}
+			args := strings.Join(msg.GetArguments(), " ")
+			log.Printf("Execve: %d -> %s (%s)", msg.GetPid(), msg.GetFilename(), args)
+			writer.Persist(int64(msg.GetPid()), int64(msg.GetParentPid()), "localhost", msg.GetFilename())
+		case OGRT.MessageType_value["ForkMsg"]:
+			msg := new(OGRT.Fork)
+
+			err = proto.Unmarshal(data, msg)
+			if err != nil {
+				log.Printf("Error decoding ExecveMsg: %s\n", err)
+				continue
+			}
+			log.Printf("Fork: %d -> %d \n", msg.GetParentPid(), msg.GetChildPid())
+			//	writer.Persist(int64(msg.GetParentPid()))
+		}
+
 	}
 }

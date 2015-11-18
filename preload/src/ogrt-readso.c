@@ -1,10 +1,5 @@
 #include "ogrt-readso.h"
 
-/* typedef struct so_info {
-  char *path;
-  uuid_t signature;
-} so_info; */
-
 /**
  * Read a "vendor specific ELF note".
  * Only documentation I could find: http://www.netbsd.org/docs/kernel/elf-notes.html
@@ -31,7 +26,7 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
   char *so_name = NULL;
   if(strlen(info->dlpi_name) > 0) {
     so_name = ogrt_normalize_path(info->dlpi_name);
-    fprintf(stderr, "OGRT: \t\t %s\n", so_name);
+    ogrt_log_debug("[D] \t\t %s\n", so_name);
   } else {
     so_name = strdup(info->dlpi_name);
   }
@@ -83,7 +78,7 @@ int count_program_header(__attribute__((unused)) struct dl_phdr_info *info, __at
 
 void *ogrt_get_loaded_so()
 {
-  fprintf(stderr, "OGRT: Displaying loaded libraries for pid %d (%s):\n", getpid(), ogrt_get_binpath(getpid()));
+  ogrt_log_debug("[D] Displaying loaded libraries for pid %d (%s):\n", getpid(), ogrt_get_binpath(getpid()));
 
   uint32_t so_count = 0;
   dl_iterate_phdr(count_program_header, (void *)&so_count);

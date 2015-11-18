@@ -74,13 +74,48 @@ __attribute__((constructor)) static int init()
       return 1;
     }
 
+    fprintf(stderr, "OGRT: I be watchin' yo! (process %d [%s] with parent %d)\n", __pid, ogrt_get_binpath(__pid), getppid());
+
     void *so_info = ogrt_get_loaded_so();
     int32_t *so_info_size = ((int32_t *)so_info);
     OGRT__SharedObject *shared_object = (OGRT__SharedObject *)(so_info_size + 2);
-    for(int i = 0; i < *so_info_size; i++) {
-      ogrt_log_debug("[D] shared object path=%s, signature=%s\n", shared_object[i].path, shared_object[i].signature);
+    OGRT__SharedObject *shared_object_excl_blank = (OGRT__SharedObject *)(so_info_size + 2) + 2;
+
+    //fprintf(stderr, "OGRT: Listing shared objects:\n");
+
+    OGRT__SharedObject *shared_object_ptr[*so_info_size];
+    //for(int i = 0; i < *so_info_size; i++) {
+    //  ogrt_log_debug("[D] shared object path=%s, signature=%s\n", shared_object[i].path, shared_object[i].signature);
+    //  fprintf(stderr, "OGRT:\tshared object path=%s, signature=%s\n", shared_object[i].path, shared_object[i].signature);
+    //  shared_object_ptr[i] = &(shared_object[i]);
+    //}
+    for(int i = 0; i < *so_info_size-2; i++) {
+      shared_object_ptr[i] = &(shared_object_excl_blank[i]);
     }
-    fprintf(stderr, "OGRT: I be watchin' yo! (process %d with parent %d)\n", __pid, getppid());
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    OGRT__ProcessInfo msg;
+    ogrt__process_info__init(&msg);
+    msg.binpath = ogrt_get_binpath(__pid);
+    msg.pid = __pid;
+    msg.parent_pid = __parent_pid;
+    msg.time = ts.tv_nsec;
+    if(shared_object[0].signature != NULL) {
+      msg.signature = shared_object[0].signature;
+    }
+    msg.n_shared_object = *so_info_size-2;
+    msg.shared_object = shared_object_ptr;
+
+    size_t msg_len = ogrt__process_info__get_packed_size(&msg);
+    void *msg_serialized = NULL, *msg_buffer = NULL;
+    int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ProcessInfoMsg, msg_len, &msg_buffer, &msg_serialized);
+
+    ogrt__process_info__pack(&msg, msg_serialized);
+    send(__daemon_socket, msg_buffer, send_length, 0);
+
+    free(so_info); //TODO: this is a memory leak
   }
 
   return 0;

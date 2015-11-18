@@ -143,17 +143,26 @@ func (m *SharedObject) GetSignature() string {
 }
 
 type ProcessInfo struct {
-	Pid                  *int32          `protobuf:"varint,300,req,name=pid" json:"pid,omitempty"`
-	ParentPid            *int32          `protobuf:"varint,301,req,name=parent_pid" json:"parent_pid,omitempty"`
-	Time                 *int64          `protobuf:"varint,302,req,name=time" json:"time,omitempty"`
-	EnvironmentVariables []string        `protobuf:"bytes,303,rep,name=environment_variables" json:"environment_variables,omitempty"`
-	SharedObject         []*SharedObject `protobuf:"bytes,304,rep,name=shared_object" json:"shared_object,omitempty"`
+	Binpath              *string         `protobuf:"bytes,300,req,name=binpath" json:"binpath,omitempty"`
+	Pid                  *int32          `protobuf:"varint,301,req,name=pid" json:"pid,omitempty"`
+	ParentPid            *int32          `protobuf:"varint,302,req,name=parent_pid" json:"parent_pid,omitempty"`
+	Time                 *int64          `protobuf:"varint,303,req,name=time" json:"time,omitempty"`
+	Signature            *string         `protobuf:"bytes,304,opt,name=signature" json:"signature,omitempty"`
+	EnvironmentVariables []string        `protobuf:"bytes,305,rep,name=environment_variables" json:"environment_variables,omitempty"`
+	SharedObject         []*SharedObject `protobuf:"bytes,306,rep,name=shared_object" json:"shared_object,omitempty"`
 	XXX_unrecognized     []byte          `json:"-"`
 }
 
 func (m *ProcessInfo) Reset()         { *m = ProcessInfo{} }
 func (m *ProcessInfo) String() string { return proto.CompactTextString(m) }
 func (*ProcessInfo) ProtoMessage()    {}
+
+func (m *ProcessInfo) GetBinpath() string {
+	if m != nil && m.Binpath != nil {
+		return *m.Binpath
+	}
+	return ""
+}
 
 func (m *ProcessInfo) GetPid() int32 {
 	if m != nil && m.Pid != nil {
@@ -174,6 +183,13 @@ func (m *ProcessInfo) GetTime() int64 {
 		return *m.Time
 	}
 	return 0
+}
+
+func (m *ProcessInfo) GetSignature() string {
+	if m != nil && m.Signature != nil {
+		return *m.Signature
+	}
+	return ""
 }
 
 func (m *ProcessInfo) GetEnvironmentVariables() []string {
