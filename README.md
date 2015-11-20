@@ -52,7 +52,8 @@ the daemon.
 ## Building
 
 ### preload
- Requirements:
+
+Requirements:
 
 - Google Protocol Buffers (https://github.com/google/protobuf)
 - Protocol Buffers for C (https://github.com/protobuf-c/protobuf-c) compiled with static and PIC
