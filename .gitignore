@@ -1,4 +1,4 @@
-server/ogrt.db
+server/ogrt-server.log
 preload/build
 preload/lib
 _vendor
