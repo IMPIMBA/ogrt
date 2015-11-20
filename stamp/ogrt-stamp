@@ -5,10 +5,8 @@ set -euo pipefail
 file=${1:-}
 
 STAMP_ASSEMBLY=$(mktemp)
-STAMP_ELF=$(mktemp)
-STAMP_BINARY=$(mktemp)
 
-STAMP_VERSION="00"
+STAMP_VERSION="0x01"
 UUID=$(uuidgen -r)
 
 /bin/cat <<EOA > $STAMP_ASSEMBLY
@@ -17,15 +15,12 @@ UUID=$(uuidgen -r)
     .long 1f - 0f           # name size (not including padding)
     .long 3f - 2f           # desc size (not including padding)
     .long 0x4F475254        # type
-0:  .asciz "OGRT"     # name
+0:  .asciz "OGRT"           # name
 1:  .p2align 2
-2:  .asciz "leaving a mark..."        # desc
+2:  .byte  ${STAMP_VERSION} # version
+    .asciz "${UUID}"        # uuid
 3:  .p2align 2
 EOA
 
-as -o "$STAMP_ELF" "$STAMP_ASSEMBLY"
-objcopy -O binary "$STAMP_ELF" "$STAMP_BINARY"
-objcopy --add-section ".note.ogrt.info=$STAMP_BINARY" "$file" "$(basename "$file").stamped"
-echo "Wrote $(basename "$file").stamped with OGRT signature."
+echo "wrote assembly file '${STAMP_ASSEMBLY}' with OGRT signature (${UUID})."
 
-rm "$STAMP_ASSEMBLY" "$STAMP_ELF" "$STAMP_BINARY"
