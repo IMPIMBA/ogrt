@@ -64,6 +64,7 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
 
       ogrt_log_debug("\n");
   }
+  free(so_name);
   (*so_info_index)++;
   return 0;
 }
