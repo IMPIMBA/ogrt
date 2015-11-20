@@ -1,5 +1,4 @@
 #include "ogrt-main.h"
-#include "ogrt-log.h"
 
 /** macro for function hooking. shamelessly stolen from snoopy */
 #define FN(ptr, type, name, args)  ptr = (type (*)args)dlsym(RTLD_NEXT, name)
@@ -13,17 +12,17 @@ static char  __hostname[HOST_NAME_MAX];
 
 /**
  * Initialize preload library.
- * Checks if tracing is activated using the environment variable OG_ASSERT_DOMINANCE.
+ * Checks if tracing is activated using the environment variable OGRT_ACTIVE.
  * If it is: connect to the unix socket of the daemon. If establishing a connection to
  * the daemon fails the init function will return with a non-zero exit code, but program
  * execution will continue as normal.
  */
 __attribute__((constructor)) static int init()
 {
-  char *env_ogrt_active = getenv("OG_ASSERT_DOMINANCE");
-  if(env_ogrt_active != NULL && (strcmp(env_ogrt_active, "yes") == 0 || strcmp(env_ogrt_active, "true") == 0 || strcmp(env_ogrt_active, "1") == 0)) {
+  if(ogrt_env_enabled("OGRT_ACTIVE")) {
     __ogrt_active = true;
   }
+
   if(__ogrt_active && __daemon_socket < 0) {
     /* establish a connection the the ogrt server */
     struct addrinfo hints, *servinfo, *p;
@@ -76,6 +75,20 @@ __attribute__((constructor)) static int init()
 
     fprintf(stderr, "OGRT: I be watchin' yo! (process %d [%s] with parent %d)\n", __pid, ogrt_get_binpath(__pid), getppid());
 
+    if(!ogrt_send_processinfo()) {
+      fprintf(stderr, "OGRT: Failed to send process info\n");
+      __ogrt_active = 0;
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+bool ogrt_send_processinfo() {
+    //TODO: refactor the process.
+    // it is kind of dirty. the currently running binary is not an so.
+
     void *so_info = ogrt_get_loaded_so();
     int32_t *so_info_size = ((int32_t *)so_info);
     OGRT__SharedObject *shared_object = (OGRT__SharedObject *)(so_info_size + 2);
@@ -102,11 +115,12 @@ __attribute__((constructor)) static int init()
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
     msg.time = ts.tv_nsec;
+    msg.job_id = strdup("100");
     if(shared_object[0].signature != NULL) {
       msg.signature = shared_object[0].signature;
     }
-    msg.n_shared_object = *so_info_size-2;
-    msg.shared_object = shared_object_ptr;
+    msg.n_shared_objects = *so_info_size-2;
+    msg.shared_objects = shared_object_ptr;
 
     size_t msg_len = ogrt__process_info__get_packed_size(&msg);
     void *msg_serialized = NULL, *msg_buffer = NULL;
@@ -116,9 +130,8 @@ __attribute__((constructor)) static int init()
     send(__daemon_socket, msg_buffer, send_length, 0);
 
     free(so_info); //TODO: this is a memory leak
-  }
-
-  return 0;
+    free(msg_buffer);
+    return true;
 }
 
 /**

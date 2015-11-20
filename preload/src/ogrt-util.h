@@ -11,8 +11,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <linux/limits.h>
+#include <string.h>
+#include <stdbool.h>
 
 /* function prototypes */
+bool ogrt_env_enabled(char *env_var);
 char *ogrt_normalize_path(const char *path);
 char *ogrt_get_binpath(const pid_t pid);
 

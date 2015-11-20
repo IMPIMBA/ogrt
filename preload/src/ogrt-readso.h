@@ -13,7 +13,7 @@
 #include <dlfcn.h>
 #include <gelf.h>
 #include "ogrt-log.h"
-#include "ogrt-fileutil.h"
+#include "ogrt-util.h"
 
 /* function prototypes */
 int ogrt_read_signature(const char *note, char *ret_version, char **ret_signature);

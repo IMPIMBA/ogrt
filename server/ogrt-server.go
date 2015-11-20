@@ -39,7 +39,7 @@ func main() {
 	// Close the listener when the application closes.
 	defer listener.Close()
 
-	writer = new(output.FileWriter)
+	writer = new(output.JsonWriter)
 	writer.Open()
 	defer writer.Close()
 
@@ -109,6 +109,26 @@ func handleRequest(conn net.Conn) {
 		log.Printf("Decoding Protobuf message with size %d (advertised %d)\n", n, msg_length)
 
 		switch msg_type {
+		case OGRT.MessageType_value["JobStartMsg"]:
+			msg := new(OGRT.JobStart)
+
+			err = proto.Unmarshal(data, msg)
+			if err != nil {
+				log.Printf("Error decoding ExecveMsg: %s\n", err)
+				continue
+			}
+			log.Printf("JobStart: %s", msg.GetJobId())
+			writer.PersistJobStart(msg)
+		case OGRT.MessageType_value["JobEndMsg"]:
+			msg := new(OGRT.JobEnd)
+
+			err = proto.Unmarshal(data, msg)
+			if err != nil {
+				log.Printf("Error decoding ExecveMsg: %s\n", err)
+				continue
+			}
+			log.Printf("JobEnd: %s", msg.GetJobId())
+			writer.PersistJobEnd(msg)
 		case OGRT.MessageType_value["ProcessInfoMsg"]:
 			msg := new(OGRT.ProcessInfo)
 
@@ -119,9 +139,10 @@ func handleRequest(conn net.Conn) {
 			}
 
 			log.Printf("bin: name=%s, signature=%s", msg.GetBinpath(), msg.GetSignature())
-			for _, so := range msg.GetSharedObject() {
+			for _, so := range msg.GetSharedObjects() {
 				log.Printf("\tso: name=%s, signature=%s", so.GetPath(), so.GetSignature())
 			}
+			writer.PersistProcessInfo(msg)
 		case OGRT.MessageType_value["ExecveMsg"]:
 			msg := new(OGRT.Execve)
 
@@ -132,7 +153,7 @@ func handleRequest(conn net.Conn) {
 			}
 			args := strings.Join(msg.GetArguments(), " ")
 			log.Printf("Execve: %d -> %s (%s)", msg.GetPid(), msg.GetFilename(), args)
-			writer.Persist(int64(msg.GetPid()), int64(msg.GetParentPid()), "localhost", msg.GetFilename())
+			//writer.Persist(int64(msg.GetPid()), int64(msg.GetParentPid()), "localhost", msg.GetFilename())
 		case OGRT.MessageType_value["ForkMsg"]:
 			msg := new(OGRT.Fork)
 

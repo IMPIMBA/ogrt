@@ -10,12 +10,12 @@ enum MessageType {
 }
 
 message JobStart {
-  required string jobid = 100;
+  required string job_id = 100;
   required int64 start_time = 101;
 }
 
 message JobEnd {
-  required string jobid = 200;
+  required string job_id = 200;
   required int64 end_time = 201;
 }
 
@@ -30,8 +30,14 @@ message ProcessInfo {
   required int32 parent_pid = 302;
   required int64 time = 303;
   optional string signature = 304;
-  repeated string environment_variables = 305;
-  repeated SharedObject shared_object = 306;
+  optional string job_id = 305;
+  repeated string environment_variables = 306;
+  repeated SharedObject shared_objects = 307;
+}
+
+message JobInfo {
+  required string job_id = 400;
+  repeated ProcessInfo processes = 401;
 }
 
 message Fork {

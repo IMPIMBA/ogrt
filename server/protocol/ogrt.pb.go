@@ -13,6 +13,7 @@ It has these top-level messages:
 	JobEnd
 	SharedObject
 	ProcessInfo
+	JobInfo
 	Fork
 	Execve
 */
@@ -71,7 +72,7 @@ func (x *MessageType) UnmarshalJSON(data []byte) error {
 }
 
 type JobStart struct {
-	Jobid            *string `protobuf:"bytes,100,req,name=jobid" json:"jobid,omitempty"`
+	JobId            *string `protobuf:"bytes,100,req,name=job_id" json:"job_id,omitempty"`
 	StartTime        *int64  `protobuf:"varint,101,req,name=start_time" json:"start_time,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -80,9 +81,9 @@ func (m *JobStart) Reset()         { *m = JobStart{} }
 func (m *JobStart) String() string { return proto.CompactTextString(m) }
 func (*JobStart) ProtoMessage()    {}
 
-func (m *JobStart) GetJobid() string {
-	if m != nil && m.Jobid != nil {
-		return *m.Jobid
+func (m *JobStart) GetJobId() string {
+	if m != nil && m.JobId != nil {
+		return *m.JobId
 	}
 	return ""
 }
@@ -95,7 +96,7 @@ func (m *JobStart) GetStartTime() int64 {
 }
 
 type JobEnd struct {
-	Jobid            *string `protobuf:"bytes,200,req,name=jobid" json:"jobid,omitempty"`
+	JobId            *string `protobuf:"bytes,200,req,name=job_id" json:"job_id,omitempty"`
 	EndTime          *int64  `protobuf:"varint,201,req,name=end_time" json:"end_time,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -104,9 +105,9 @@ func (m *JobEnd) Reset()         { *m = JobEnd{} }
 func (m *JobEnd) String() string { return proto.CompactTextString(m) }
 func (*JobEnd) ProtoMessage()    {}
 
-func (m *JobEnd) GetJobid() string {
-	if m != nil && m.Jobid != nil {
-		return *m.Jobid
+func (m *JobEnd) GetJobId() string {
+	if m != nil && m.JobId != nil {
+		return *m.JobId
 	}
 	return ""
 }
@@ -148,8 +149,9 @@ type ProcessInfo struct {
 	ParentPid            *int32          `protobuf:"varint,302,req,name=parent_pid" json:"parent_pid,omitempty"`
 	Time                 *int64          `protobuf:"varint,303,req,name=time" json:"time,omitempty"`
 	Signature            *string         `protobuf:"bytes,304,opt,name=signature" json:"signature,omitempty"`
-	EnvironmentVariables []string        `protobuf:"bytes,305,rep,name=environment_variables" json:"environment_variables,omitempty"`
-	SharedObject         []*SharedObject `protobuf:"bytes,306,rep,name=shared_object" json:"shared_object,omitempty"`
+	JobId                *string         `protobuf:"bytes,305,opt,name=job_id" json:"job_id,omitempty"`
+	EnvironmentVariables []string        `protobuf:"bytes,306,rep,name=environment_variables" json:"environment_variables,omitempty"`
+	SharedObjects        []*SharedObject `protobuf:"bytes,307,rep,name=shared_objects" json:"shared_objects,omitempty"`
 	XXX_unrecognized     []byte          `json:"-"`
 }
 
@@ -192,6 +194,13 @@ func (m *ProcessInfo) GetSignature() string {
 	return ""
 }
 
+func (m *ProcessInfo) GetJobId() string {
+	if m != nil && m.JobId != nil {
+		return *m.JobId
+	}
+	return ""
+}
+
 func (m *ProcessInfo) GetEnvironmentVariables() []string {
 	if m != nil {
 		return m.EnvironmentVariables
@@ -199,9 +208,33 @@ func (m *ProcessInfo) GetEnvironmentVariables() []string {
 	return nil
 }
 
-func (m *ProcessInfo) GetSharedObject() []*SharedObject {
+func (m *ProcessInfo) GetSharedObjects() []*SharedObject {
 	if m != nil {
-		return m.SharedObject
+		return m.SharedObjects
+	}
+	return nil
+}
+
+type JobInfo struct {
+	JobId            *string        `protobuf:"bytes,400,req,name=job_id" json:"job_id,omitempty"`
+	Processes        []*ProcessInfo `protobuf:"bytes,401,rep,name=processes" json:"processes,omitempty"`
+	XXX_unrecognized []byte         `json:"-"`
+}
+
+func (m *JobInfo) Reset()         { *m = JobInfo{} }
+func (m *JobInfo) String() string { return proto.CompactTextString(m) }
+func (*JobInfo) ProtoMessage()    {}
+
+func (m *JobInfo) GetJobId() string {
+	if m != nil && m.JobId != nil {
+		return *m.JobId
+	}
+	return ""
+}
+
+func (m *JobInfo) GetProcesses() []*ProcessInfo {
+	if m != nil {
+		return m.Processes
 	}
 	return nil
 }

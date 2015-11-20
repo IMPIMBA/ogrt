@@ -179,6 +179,49 @@ void   ogrt__process_info__free_unpacked
   assert(message->base.descriptor == &ogrt__process_info__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   ogrt__job_info__init
+                     (OGRT__JobInfo         *message)
+{
+  static OGRT__JobInfo init_value = OGRT__JOB_INFO__INIT;
+  *message = init_value;
+}
+size_t ogrt__job_info__get_packed_size
+                     (const OGRT__JobInfo *message)
+{
+  assert(message->base.descriptor == &ogrt__job_info__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t ogrt__job_info__pack
+                     (const OGRT__JobInfo *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &ogrt__job_info__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t ogrt__job_info__pack_to_buffer
+                     (const OGRT__JobInfo *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &ogrt__job_info__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+OGRT__JobInfo *
+       ogrt__job_info__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (OGRT__JobInfo *)
+     protobuf_c_message_unpack (&ogrt__job_info__descriptor,
+                                allocator, len, data);
+}
+void   ogrt__job_info__free_unpacked
+                     (OGRT__JobInfo *message,
+                      ProtobufCAllocator *allocator)
+{
+  assert(message->base.descriptor == &ogrt__job_info__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   ogrt__fork__init
                      (OGRT__Fork         *message)
 {
@@ -268,12 +311,12 @@ void   ogrt__execve__free_unpacked
 static const ProtobufCFieldDescriptor ogrt__job_start__field_descriptors[2] =
 {
   {
-    "jobid",
+    "job_id",
     100,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(OGRT__JobStart, jobid),
+    offsetof(OGRT__JobStart, job_id),
     NULL,
     NULL,
     0,             /* flags */
@@ -293,7 +336,7 @@ static const ProtobufCFieldDescriptor ogrt__job_start__field_descriptors[2] =
   },
 };
 static const unsigned ogrt__job_start__field_indices_by_name[] = {
-  0,   /* field[0] = jobid */
+  0,   /* field[0] = job_id */
   1,   /* field[1] = start_time */
 };
 static const ProtobufCIntRange ogrt__job_start__number_ranges[1 + 1] =
@@ -319,12 +362,12 @@ const ProtobufCMessageDescriptor ogrt__job_start__descriptor =
 static const ProtobufCFieldDescriptor ogrt__job_end__field_descriptors[2] =
 {
   {
-    "jobid",
+    "job_id",
     200,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(OGRT__JobEnd, jobid),
+    offsetof(OGRT__JobEnd, job_id),
     NULL,
     NULL,
     0,             /* flags */
@@ -345,7 +388,7 @@ static const ProtobufCFieldDescriptor ogrt__job_end__field_descriptors[2] =
 };
 static const unsigned ogrt__job_end__field_indices_by_name[] = {
   1,   /* field[1] = end_time */
-  0,   /* field[0] = jobid */
+  0,   /* field[0] = job_id */
 };
 static const ProtobufCIntRange ogrt__job_end__number_ranges[1 + 1] =
 {
@@ -418,7 +461,7 @@ const ProtobufCMessageDescriptor ogrt__shared_object__descriptor =
   (ProtobufCMessageInit) ogrt__shared_object__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[7] =
+static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[8] =
 {
   {
     "binpath",
@@ -481,8 +524,20 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[7] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "environment_variables",
+    "job_id",
     305,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__ProcessInfo, job_id),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "environment_variables",
+    306,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
     offsetof(OGRT__ProcessInfo, n_environment_variables),
@@ -493,12 +548,12 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[7] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "shared_object",
-    306,
+    "shared_objects",
+    307,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(OGRT__ProcessInfo, n_shared_object),
-    offsetof(OGRT__ProcessInfo, shared_object),
+    offsetof(OGRT__ProcessInfo, n_shared_objects),
+    offsetof(OGRT__ProcessInfo, shared_objects),
     &ogrt__shared_object__descriptor,
     NULL,
     0,             /* flags */
@@ -507,17 +562,18 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[7] =
 };
 static const unsigned ogrt__process_info__field_indices_by_name[] = {
   0,   /* field[0] = binpath */
-  5,   /* field[5] = environment_variables */
+  6,   /* field[6] = environment_variables */
+  5,   /* field[5] = job_id */
   2,   /* field[2] = parent_pid */
   1,   /* field[1] = pid */
-  6,   /* field[6] = shared_object */
+  7,   /* field[7] = shared_objects */
   4,   /* field[4] = signature */
   3,   /* field[3] = time */
 };
 static const ProtobufCIntRange ogrt__process_info__number_ranges[1 + 1] =
 {
   { 300, 0 },
-  { 0, 7 }
+  { 0, 8 }
 };
 const ProtobufCMessageDescriptor ogrt__process_info__descriptor =
 {
@@ -527,11 +583,62 @@ const ProtobufCMessageDescriptor ogrt__process_info__descriptor =
   "OGRT__ProcessInfo",
   "OGRT",
   sizeof(OGRT__ProcessInfo),
-  7,
+  8,
   ogrt__process_info__field_descriptors,
   ogrt__process_info__field_indices_by_name,
   1,  ogrt__process_info__number_ranges,
   (ProtobufCMessageInit) ogrt__process_info__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor ogrt__job_info__field_descriptors[2] =
+{
+  {
+    "job_id",
+    400,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__JobInfo, job_id),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "processes",
+    401,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(OGRT__JobInfo, n_processes),
+    offsetof(OGRT__JobInfo, processes),
+    &ogrt__process_info__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned ogrt__job_info__field_indices_by_name[] = {
+  0,   /* field[0] = job_id */
+  1,   /* field[1] = processes */
+};
+static const ProtobufCIntRange ogrt__job_info__number_ranges[1 + 1] =
+{
+  { 400, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor ogrt__job_info__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "OGRT.JobInfo",
+  "JobInfo",
+  "OGRT__JobInfo",
+  "OGRT",
+  sizeof(OGRT__JobInfo),
+  2,
+  ogrt__job_info__field_descriptors,
+  ogrt__job_info__field_indices_by_name,
+  1,  ogrt__job_info__number_ranges,
+  (ProtobufCMessageInit) ogrt__job_info__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor ogrt__fork__field_descriptors[4] =

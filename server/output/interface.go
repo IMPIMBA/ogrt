@@ -1,16 +1,13 @@
 package output
 
-import ()
-
-type PidInfo struct {
-	Pid            int64  `db:"pid"`
-	PidParent      int64  `db:"pid_parent"`
-	Hostname       string `db:"hostname"`
-	ExecutablePath string `db:"exec_path"`
-}
+import (
+	"github.com/georg-rath/ogrt/protocol"
+)
 
 type OGWriter interface {
-	Persist(pid int64, parentPid int64, msg_type string, exec string)
+	PersistJobStart(msg *OGRT.JobStart)
+	PersistJobEnd(msg *OGRT.JobEnd)
+	PersistProcessInfo(msg *OGRT.ProcessInfo)
 	Open()
 	Close()
 }
