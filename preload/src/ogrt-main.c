@@ -115,7 +115,7 @@ bool ogrt_send_processinfo() {
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
     msg.time = ts.tv_nsec;
-    msg.job_id = strdup("100");
+    msg.job_id = strdup(OGRT_ENV_JOBID);
     if(shared_object[0].signature != NULL) {
       msg.signature = shared_object[0].signature;
     }
