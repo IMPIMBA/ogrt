@@ -3,6 +3,22 @@
 /**
  * Read a "vendor specific ELF note".
  * Only documentation I could find: http://www.netbsd.org/docs/kernel/elf-notes.html
+ * The signature is in the format:
+ *                4 bytes
+ * +-----------------------------------+
+ * |             name_size             |
+ * +-----------------------------------+
+ * |             desc_size             |
+ * +-----------------------------------+
+ * |               type                |
+ * +-----------------------------------+
+ * |               name                |
+ * +-----------------------------------+
+ * | ver |            uuid             |
+ * +-----------------------------------+
+ *
+ * All values are padded to 4 byte boundaries.
+ * OGRT version is 1 byte, uuid is a null terminated string.
  */
 int read_signature(const char *note, char *ret_version, char **ret_signature) {
   int32_t name_size = *((int32_t *)note);
@@ -21,8 +37,12 @@ int read_signature(const char *note, char *ret_version, char **ret_signature) {
   return desc_size+name_size+12;
 }
 
+/**
+ * Process an ELF program header section (located in memory).
+ */
 int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size_t size, void *data)
 {
+  /** if there is a name, normalize it's path **/
   char *so_name = NULL;
   if(strlen(info->dlpi_name) > 0) {
     so_name = ogrt_normalize_path(info->dlpi_name);
@@ -33,6 +53,11 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
 
   ogrt_log_debug("[D] name=%s (%d segments)\n", info->dlpi_name, info->dlpi_phnum);
 
+  /**
+   * data is a data structure holding an array of SharedObject protobufs.
+   * it also contains the number of elements and an index variable.
+   * The index variable is used to track the number of calls to handle_program_header().
+   */
   int32_t *so_info_size = ((int32_t *)data);
   int32_t *so_info_index = ((int32_t *)data) + 1;
   OGRT__SharedObject *so_infos = (OGRT__SharedObject *)(so_info_size + 2);
@@ -40,6 +65,7 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
   ogrt_log_debug("[D] so_info: size %d, index %d\n", *so_info_size, *so_info_index);
   ogrt_log_debug("[D] so_info: size %10p, index %10p\n", so_info_size, so_info_index);
 
+  /** check all sections */
   for (int j = 0; j < info->dlpi_phnum; j++){
       ogrt_log_debug("[D]\t\theader %2d: address=%10p phys=%10p size=%ld", j, (void *) (info->dlpi_addr + info->dlpi_phdr[j].p_vaddr), (void *)info->dlpi_addr, info->dlpi_phdr[j].p_filesz);
 
