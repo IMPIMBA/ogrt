@@ -3,6 +3,7 @@ package output
 import (
 	"encoding/json"
 	"github.com/georg-rath/ogrt/protocol"
+	"io/ioutil"
 	"os"
 )
 
@@ -13,6 +14,14 @@ type JsonWriter struct {
 
 func (fw *JsonWriter) Open() {
 	fw.file = make(map[string]*os.File)
+
+	if _, err := os.Stat("./jobs/"); err != nil {
+		if os.IsNotExist(err) {
+			os.Mkdir("./jobs", 0700)
+		} else {
+			panic(err)
+		}
+	}
 }
 
 func (fw *JsonWriter) PersistJobStart(job_start *OGRT.JobStart) {
@@ -22,31 +31,30 @@ func (fw *JsonWriter) PersistJobEnd(job_end *OGRT.JobEnd) {
 }
 
 func (fw *JsonWriter) PersistProcessInfo(process_info *OGRT.ProcessInfo) {
-	if _, ok := fw.file[process_info.GetJobId()]; !ok {
-		var err error
-		if _, err := os.Stat("./jobs/"); err != nil {
-			if os.IsNotExist(err) {
-				os.Mkdir("./jobs", 0700)
-			} else {
-				panic(err)
-			}
-		}
-
-		fw.file[process_info.GetJobId()], err = os.OpenFile("./jobs/"+process_info.GetJobId(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	filepath := "./jobs/" + process_info.GetJobId()
+	var job_info OGRT.JobInfo
+	json_bytes, err := ioutil.ReadFile(filepath)
+	if err == nil {
+		err = json.Unmarshal(json_bytes, &job_info)
 		if err != nil {
 			panic(err)
 		}
+	} else {
+		jid := process_info.GetJobId()
+		job_info.JobId = &jid
 	}
+	job_info.Processes = append(job_info.Processes, process_info)
 
-	b, err := json.Marshal(process_info)
+	b, err := json.Marshal(job_info)
 	if err != nil {
 		panic(err)
 	}
 
-	if _, err := fw.file[process_info.GetJobId()].Write(b); err != nil {
+	file, err := os.Create(filepath)
+	if _, err := file.Write(b); err != nil {
 		panic(err)
 	}
-
+	file.Close()
 }
 
 func (fw *JsonWriter) Close() {
