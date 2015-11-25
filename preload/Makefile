@@ -10,7 +10,7 @@
 
 # libraries
 STATIC_LIBS=-lprotobuf-c
-SHARED_LIBS=-ldl
+SHARED_LIBS=-ldl -lrt #TODO: lrt is only necessary < glibc 2.17 (http://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim)
 
 # compiler/linker flags
 CC=gcc
