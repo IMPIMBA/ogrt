@@ -5,16 +5,15 @@ import (
 	"github.com/georg-rath/ogrt/protocol"
 	"io/ioutil"
 	"os"
+	"sync"
 )
 
 type JsonWriter struct {
 	OGWriter
-	file map[string]*os.File
+	mu sync.Mutex
 }
 
 func (fw *JsonWriter) Open() {
-	fw.file = make(map[string]*os.File)
-
 	if _, err := os.Stat("./jobs/"); err != nil {
 		if os.IsNotExist(err) {
 			os.Mkdir("./jobs", 0700)
@@ -33,6 +32,7 @@ func (fw *JsonWriter) PersistJobEnd(job_end *OGRT.JobEnd) {
 func (fw *JsonWriter) PersistProcessInfo(process_info *OGRT.ProcessInfo) {
 	filepath := "./jobs/" + process_info.GetJobId()
 	var job_info OGRT.JobInfo
+	fw.mu.Lock()
 	json_bytes, err := ioutil.ReadFile(filepath)
 	if err == nil {
 		err = json.Unmarshal(json_bytes, &job_info)
@@ -55,6 +55,7 @@ func (fw *JsonWriter) PersistProcessInfo(process_info *OGRT.ProcessInfo) {
 		panic(err)
 	}
 	file.Close()
+	fw.mu.Unlock()
 }
 
 func (fw *JsonWriter) Close() {
