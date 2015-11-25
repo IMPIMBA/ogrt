@@ -36,6 +36,7 @@ Daemon written in Go. The purpose of this daemon is receive and
 preprocess data from the preload library, before persisting it.
 
 This currently writes JSON information into the './jobs' directory.
+Currently this method of output is _very_ slow (needs to be improved).
 
 ### signature
 
@@ -55,10 +56,10 @@ the daemon.
 
 Requirements:
 
-- Google Protocol Buffers (https://github.com/google/protobuf)
-- Protocol Buffers for C (https://github.com/protobuf-c/protobuf-c) compiled with static and PIC
-- libelf development headers
-- the uuidgen binary
+* [Google Protocol Buffers](https://github.com/google/protobuf)
+* [Protocol Buffers for C](https://github.com/protobuf-c/protobuf-c) compiled with static and PIC
+* libelf development headers
+* the uuidgen binary
 
 1. Make sure your machine fulfills the requirements
 2. Check 'preload/src/ogrt-main.h' for settings for the library
