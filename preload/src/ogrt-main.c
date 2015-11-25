@@ -115,7 +115,8 @@ bool ogrt_send_processinfo() {
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
     msg.time = ts.tv_nsec;
-    msg.job_id = strdup(getenv(OGRT_ENV_JOBID));
+    char *job_id = getenv(OGRT_ENV_JOBID);
+    msg.job_id = job_id == NULL ? "UNKNOWN" : job_id;
     if(shared_object[0].signature != NULL) {
       msg.signature = shared_object[0].signature;
     }
