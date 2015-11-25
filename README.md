@@ -57,6 +57,8 @@ Requirements:
 
 - Google Protocol Buffers (https://github.com/google/protobuf)
 - Protocol Buffers for C (https://github.com/protobuf-c/protobuf-c) compiled with static and PIC
+- libelf development headers
+- the uuidgen binary
 
 1. Make sure your machine fulfills the requirements
 2. Check 'preload/src/ogrt-main.h' for settings for the library
