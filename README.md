@@ -61,6 +61,8 @@ Requirements:
 * libelf development headers
 * the uuidgen binary
 
+Compilation:
+
 1. Make sure your machine fulfills the requirements
 2. Check 'preload/src/ogrt-main.h' for settings for the library
 3. Run 'make' in the 'preload' directory
