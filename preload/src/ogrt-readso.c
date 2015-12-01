@@ -82,7 +82,7 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
           char *signature = NULL;
           while(offset < program_header->p_memsz) {
             offset += read_signature(notes + offset, &version, &signature);
-            shared_object->path = strdup(so_name);
+            shared_object->path = strdup(so_name); //TODO: this is wrong, the shared object is also interesting if it does not contain a note section
             shared_object->signature = signature;
           }
         }

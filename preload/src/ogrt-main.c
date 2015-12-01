@@ -131,6 +131,7 @@ bool ogrt_send_processinfo() {
     msg.binpath = ogrt_get_binpath(__pid);
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
+    #TODO: fix the time
     msg.time = ts.tv_nsec;
     char *job_id = getenv(OGRT_ENV_JOBID);
     msg.job_id = job_id == NULL ? "UNKNOWN" : job_id;
