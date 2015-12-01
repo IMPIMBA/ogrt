@@ -19,6 +19,7 @@
 #include "ogrt-readso.h"
 #include "ogrt-log.h"
 #include "ogrt-util.h"
+#include "ogrt-cmdline.h"
 
 /* debug settings */
 //#define OGRT_DEBUG

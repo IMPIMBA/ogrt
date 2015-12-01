@@ -85,6 +85,23 @@ __attribute__((constructor)) static int init()
   return 0;
 }
 
+/**
+ * Function used when executing the shared library as executable.
+ * Display various information on how the program was compiled.
+ */
+int main(int argc, char *argv[]) {
+  struct gengetopt_args_info ai;
+  if (cmdline_parser(argc, argv, &ai) != 0) {
+      exit(1);
+  }
+
+  if(argc == 1) {
+    cmdline_parser_print_help();
+  }
+
+  return 0;
+}
+
 bool ogrt_send_processinfo() {
     //TODO: refactor the process.
     // it is kind of dirty. the currently running binary is not an so.
