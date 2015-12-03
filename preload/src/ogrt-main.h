@@ -15,11 +15,14 @@
 #include <netdb.h>
 #include <time.h>
 #include <stdbool.h>
+#include <pwd.h>
+#include <uuid/uuid.h>
 #include "ogrt.pb-c.h"
 #include "ogrt-readso.h"
 #include "ogrt-log.h"
 #include "ogrt-util.h"
 #include "ogrt-cmdline.h"
+#include "ogrt-signature.h"
 
 /* debug settings */
 //#define OGRT_DEBUG

@@ -12,7 +12,7 @@
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
 # libraries
-STATIC_LIBS=-lprotobuf-c
+STATIC_LIBS=-lprotobuf-c -luuid
 SHARED_LIBS=-ldl -lrt #TODO: lrt is only necessary < glibc 2.17 (http://stackoverflow.com/questions/2418157/ubuntu-linux-c-error-undefined-reference-to-clock-gettime-and-clock-settim)
 
 # compiler/linker flags

@@ -31,7 +31,7 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_VERSION
 /** @brief the program version */
-#define CMDLINE_PARSER_VERSION "e9ba-dirty"
+#define CMDLINE_PARSER_VERSION "6c12-dirty"
 #endif
 
 /** @brief Where the command line options are stored */
@@ -39,10 +39,13 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
+  const char *generate_signature_help; /**< @brief generate signature object file help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
+  unsigned int generate_signature_given ;	/**< @brief Whether generate-signature was given.  */
 
+  int link_info_mode_counter; /**< @brief Counter for mode link_info */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

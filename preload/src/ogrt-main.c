@@ -8,7 +8,7 @@ static bool  __ogrt_active   =  0;
 static int   __daemon_socket = -1;
 static pid_t __pid           =  0;
 static pid_t __parent_pid    =  0;
-static char  __hostname[HOST_NAME_MAX];
+static char  __hostname[HOST_NAME_MAX+1];
 
 /**
  * Initialize preload library.
@@ -99,6 +99,27 @@ int main(int argc, char *argv[]) {
     cmdline_parser_print_help();
   }
 
+  if(ai.generate_signature_given) {
+    char hostname[HOST_NAME_MAX+1];
+    if(gethostname(hostname, sizeof(hostname)) != 0) {
+      fprintf(stderr, "failed to get hostname\n");
+      return 1;
+    }
+    printf("Host name: %s\n", hostname);
+
+    struct passwd *pwd_entry = getpwuid(getuid());
+    printf("User name: %s\n", pwd_entry->pw_name);
+
+    uuid_t uuid;
+    uuid_generate_time_safe(uuid);
+    uuid_unparse_lower(uuid, template_signature+0x51);
+    printf("UUID: %s\n", template_signature+0x51);
+
+    for(unsigned int i=0; i < template_signature_len; i++) {
+      fprintf(stderr, "%c", template_signature[i]);
+    }
+
+  }
   return 0;
 }
 
@@ -131,7 +152,7 @@ bool ogrt_send_processinfo() {
     msg.binpath = ogrt_get_binpath(__pid);
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
-    #TODO: fix the time
+    //TODO: fix the time
     msg.time = ts.tv_nsec;
     char *job_id = getenv(OGRT_ENV_JOBID);
     msg.job_id = job_id == NULL ? "UNKNOWN" : job_id;
