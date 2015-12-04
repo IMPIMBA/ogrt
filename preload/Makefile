@@ -17,7 +17,7 @@ SHARED_LIBS=-ldl -lrt #TODO: lrt is only necessary < glibc 2.17 (http://stackove
 
 # compiler/linker flags
 CC=gcc
-CFLAGS=-fPIC -Wall -Wextra -std=c11 -g -O2
+CFLAGS=-fPIC -Wall -Wextra -std=c11 -g -O3
 LDFLAGS=-pie -Wl,-Bstatic $(STATIC_LIBS) -Wl,-Bdynamic $(SHARED_LIBS)
 
 # directories
@@ -29,7 +29,7 @@ OUTDIR=lib
 SOURCES=$(wildcard $(SRCDIR)/*.c)
 OBJECTS=$(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
 STAMP=$(SRCDIR)/stamp.s
-TARGET=ogrt-preload.so
+TARGET=ogrt
 
 # utility functions
 dir_guard=@mkdir -p $(@D)

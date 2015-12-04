@@ -150,8 +150,9 @@ type ProcessInfo struct {
 	Time                 *int64          `protobuf:"varint,303,req,name=time" json:"time,omitempty"`
 	Signature            *string         `protobuf:"bytes,304,opt,name=signature" json:"signature,omitempty"`
 	JobId                *string         `protobuf:"bytes,305,opt,name=job_id" json:"job_id,omitempty"`
-	EnvironmentVariables []string        `protobuf:"bytes,306,rep,name=environment_variables" json:"environment_variables,omitempty"`
-	SharedObjects        []*SharedObject `protobuf:"bytes,307,rep,name=shared_objects" json:"shared_objects,omitempty"`
+	UserName             *string         `protobuf:"bytes,306,opt,name=user_name" json:"user_name,omitempty"`
+	EnvironmentVariables []string        `protobuf:"bytes,307,rep,name=environment_variables" json:"environment_variables,omitempty"`
+	SharedObjects        []*SharedObject `protobuf:"bytes,308,rep,name=shared_objects" json:"shared_objects,omitempty"`
 	XXX_unrecognized     []byte          `json:"-"`
 }
 
@@ -197,6 +198,13 @@ func (m *ProcessInfo) GetSignature() string {
 func (m *ProcessInfo) GetJobId() string {
 	if m != nil && m.JobId != nil {
 		return *m.JobId
+	}
+	return ""
+}
+
+func (m *ProcessInfo) GetUserName() string {
+	if m != nil && m.UserName != nil {
+		return *m.UserName
 	}
 	return ""
 }

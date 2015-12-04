@@ -80,6 +80,7 @@ struct  _OGRT__ProcessInfo
   int64_t time;
   char *signature;
   char *job_id;
+  char *user_name;
   size_t n_environment_variables;
   char **environment_variables;
   size_t n_shared_objects;
@@ -87,7 +88,7 @@ struct  _OGRT__ProcessInfo
 };
 #define OGRT__PROCESS_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&ogrt__process_info__descriptor) \
-    , NULL, 0, 0, 0, NULL, NULL, 0,NULL, 0,NULL }
+    , NULL, 0, 0, 0, NULL, NULL, NULL, 0,NULL, 0,NULL }
 
 
 struct  _OGRT__JobInfo

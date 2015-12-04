@@ -13,6 +13,7 @@
 #include <linux/limits.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pwd.h>
 
 /* function prototypes */
 bool ogrt_env_enabled(char *env_var);

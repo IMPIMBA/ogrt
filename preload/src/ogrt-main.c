@@ -111,16 +111,15 @@ int main(int argc, char *argv[]) {
     printf("User name: %s\n", pwd_entry->pw_name);
 
     uuid_t uuid;
-    uuid_generate_time_safe(uuid);
+    uuid_generate(uuid);
     uuid_unparse_lower(uuid, template_signature+0x51);
     printf("UUID: %s\n", template_signature+0x51);
 
     for(unsigned int i=0; i < template_signature_len; i++) {
       fprintf(stderr, "%c", template_signature[i]);
     }
-
   }
-  return 0;
+
 }
 
 bool ogrt_send_processinfo() {
@@ -147,13 +146,15 @@ bool ogrt_send_processinfo() {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
 
+    struct passwd *pwd_entry = getpwuid(getuid());
+
     OGRT__ProcessInfo msg;
     ogrt__process_info__init(&msg);
     msg.binpath = ogrt_get_binpath(__pid);
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
-    //TODO: fix the time
-    msg.time = ts.tv_nsec;
+    msg.time = ts.tv_sec;
+    msg.user_name = pwd_entry->pw_name;
     char *job_id = getenv(OGRT_ENV_JOBID);
     msg.job_id = job_id == NULL ? "UNKNOWN" : job_id;
     if(shared_object[0].signature != NULL) {
@@ -174,6 +175,7 @@ bool ogrt_send_processinfo() {
     return true;
 }
 
+#if 0
 /**
  * Hook execve function.
  * This function intercepts the execve call. If OGRT is active it will send
@@ -260,6 +262,7 @@ int fork(void){
   /* return output of original function */
   return ret;
 }
+#endif
 
 /**
  * Prepare send buffer for shipping to daemon.

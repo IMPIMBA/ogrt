@@ -1,7 +1,10 @@
 #include "ogrt-util.h"
 
-/** Environment Functions **/
+/* Environment Functions */
 
+/**
+ * Check if an environment variable is true
+ */
 bool ogrt_env_enabled(char *env_variable) {
   char *env_var = getenv(env_variable);
   if(env_var != NULL && (strcmp(env_var, "yes") == 0 || strcmp(env_var, "true") == 0 || strcmp(env_var, "1") == 0)) {
@@ -10,7 +13,8 @@ bool ogrt_env_enabled(char *env_variable) {
   return false;
 }
 
-/** File Functions **/
+/* File Functions */
+
 /**
  * Normalize a path to not contain '..' or '.'.
  * TODO: This function uses the glibc realpath internally and could do disk access.
@@ -52,4 +56,3 @@ char *ogrt_get_binpath(const pid_t pid) {
   bin_path[len] = '\0';
   return bin_path;
 }
-

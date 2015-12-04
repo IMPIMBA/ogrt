@@ -39,7 +39,7 @@ func main() {
 	// Close the listener when the application closes.
 	defer listener.Close()
 
-	writer = new(output.JsonWriter)
+	writer = new(output.JsonOverTcpOutput)
 	writer.Open()
 	defer writer.Close()
 

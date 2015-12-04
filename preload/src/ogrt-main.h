@@ -15,7 +15,6 @@
 #include <netdb.h>
 #include <time.h>
 #include <stdbool.h>
-#include <pwd.h>
 #include <uuid/uuid.h>
 #include "ogrt.pb-c.h"
 #include "ogrt-readso.h"
