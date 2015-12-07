@@ -16,16 +16,24 @@ import (
 	"syscall"
 )
 
-var writer output.OGWriter
 var config Configuration
+
+type Output struct {
+	Type   string
+	Params string
+	Writer output.OGWriter
+}
 
 type Configuration struct {
 	Address          string
 	Port             int
 	MaxReceiveBuffer uint32
+	Outputs          map[string]Output
 }
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
+
 	if _, err := toml.DecodeFile("ogrt.conf", &config); err != nil {
 		log.Fatal(err)
 	}
@@ -39,9 +47,23 @@ func main() {
 	// Close the listener when the application closes.
 	defer listener.Close()
 
-	writer = new(output.JsonOverTcpOutput)
-	writer.Open()
-	defer writer.Close()
+	/* instantiate all outputs */
+	for name, out := range config.Outputs {
+		output_gosucks := config.Outputs[name]
+		switch out.Type {
+		case "JsonOverTcp":
+			output_gosucks.Writer = new(output.JsonOverTcpOutput)
+		case "JsonFile":
+			output_gosucks.Writer = new(output.JsonFileOutput)
+		default:
+			log.Fatal("Unkown output type: ", out.Type)
+		}
+		output_gosucks.Writer.Open(out.Params)
+		config.Outputs[name] = output_gosucks
+		defer output_gosucks.Writer.Close()
+
+		log.Printf("Instantiated output '%s' (%s) with parameters: '%s'", name, output_gosucks.Type, output_gosucks.Params)
+	}
 
 	/* Setup signal handler for SIGKILL and SIGTERM */
 	sigc := make(chan os.Signal, 1)
@@ -50,7 +72,9 @@ func main() {
 		sig := <-c
 		log.Printf("Caught signal %s: shutting down.\n", sig)
 		listener.Close()
-		writer.Close()
+		for _, out := range config.Outputs {
+			out.Writer.Close()
+		}
 		os.Exit(0)
 	}(sigc)
 
@@ -62,7 +86,6 @@ func main() {
 			os.Exit(1)
 		}
 
-		log.Println("Opened connection")
 		// Handle connections in a new goroutine.
 		go handleRequest(connection)
 	}
@@ -70,16 +93,15 @@ func main() {
 
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
-	log.Println("Handling packet...")
 	// Close the connection when the function exits
 	defer conn.Close()
+
 	// Read the data waiting on the connection and put it in the data buffer
 	for {
 		// Read header from the connection
 		header := make([]byte, 8)
 		n, err := conn.Read(header)
 		if err == io.EOF {
-			log.Println("Connection closed by remote end.")
 			return
 		} else if err != nil {
 			log.Printf("Connection closed unexpectedly after receiving %d bytes with error %s.\n", n, err)
@@ -89,7 +111,6 @@ func handleRequest(conn net.Conn) {
 		// Decode type and length of packet from header
 		msg_type := int32(binary.BigEndian.Uint32(header[0:4]))
 		msg_length := binary.BigEndian.Uint32(header[4:8])
-		log.Printf("type %d length %d \n", msg_type, msg_length)
 
 		if msg_length > config.MaxReceiveBuffer {
 			log.Printf("OGRT_SERVER: Received message bigger than maximum receive buffer")
@@ -99,14 +120,11 @@ func handleRequest(conn net.Conn) {
 		data := make([]byte, msg_length)
 		n, err = conn.Read(data)
 		if err == io.EOF {
-			log.Println("Connection closed by remote end.\n")
 			return
 		} else if err != nil {
 			log.Printf("Connection closed unexpectedly after receiving %d bytes with error %s.\n", n, err)
 			return
 		}
-
-		log.Printf("Decoding Protobuf message with size %d (advertised %d)\n", n, msg_length)
 
 		switch msg_type {
 		case OGRT.MessageType_value["JobStartMsg"]:
@@ -118,7 +136,7 @@ func handleRequest(conn net.Conn) {
 				continue
 			}
 			log.Printf("JobStart: %s", msg.GetJobId())
-			writer.PersistJobStart(msg)
+			//			writer.PersistJobStart(msg)
 		case OGRT.MessageType_value["JobEndMsg"]:
 			msg := new(OGRT.JobEnd)
 
@@ -128,7 +146,7 @@ func handleRequest(conn net.Conn) {
 				continue
 			}
 			log.Printf("JobEnd: %s", msg.GetJobId())
-			writer.PersistJobEnd(msg)
+			//			writer.PersistJobEnd(msg)
 		case OGRT.MessageType_value["ProcessInfoMsg"]:
 			msg := new(OGRT.ProcessInfo)
 
@@ -138,11 +156,15 @@ func handleRequest(conn net.Conn) {
 				continue
 			}
 
-			log.Printf("bin: name=%s, signature=%s", msg.GetBinpath(), msg.GetSignature())
-			for _, so := range msg.GetSharedObjects() {
-				log.Printf("\tso: name=%s, signature=%s", so.GetPath(), so.GetSignature())
+			//			log.Printf("bin: name=%s, signature=%s", msg.GetBinpath(), msg.GetSignature())
+			//			for _, so := range msg.GetSharedObjects() {
+			//				log.Printf("\tso: name=%s, signature=%s", so.GetPath(), so.GetSignature())
+			//			}
+			log.Printf("Persisting JobId=%s,pid=%d,bin=%s", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
+			for _, out := range config.Outputs {
+				out.Writer.PersistProcessInfo(msg)
 			}
-			writer.PersistProcessInfo(msg)
+			log.Printf("Persisting JobId=%s,pid=%d,bin=%s - Done.", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
 		case OGRT.MessageType_value["ExecveMsg"]:
 			msg := new(OGRT.Execve)
 
