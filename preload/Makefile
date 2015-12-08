@@ -18,38 +18,46 @@ SHARED_LIBS=-ldl -lrt #TODO: lrt is only necessary < glibc 2.17 (http://stackove
 # compiler/linker flags
 CC=gcc
 CFLAGS=-fPIC -Wall -Wextra -std=c11 -g -O3
-LDFLAGS=-pie -Wl,-Bstatic $(STATIC_LIBS) -Wl,-Bdynamic $(SHARED_LIBS)
+LIB_LDFLAGS=-shared -Wl,-Bstatic $(STATIC_LIBS) -Wl,-Bdynamic $(SHARED_LIBS)
+CLI_LDFLAGS=-Wl,-Bstatic $(STATIC_LIBS) -Wl,-Bdynamic $(SHARED_LIBS)
 
 # directories
 SRCDIR=src
-BUILDDIR=build
-OUTDIR=lib
-
-# files
-SOURCES=$(wildcard $(SRCDIR)/*.c)
-OBJECTS=$(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
 STAMP=$(SRCDIR)/stamp.s
-TARGET=ogrt
+
+CLI_SOURCES=$(SRCDIR)/ogrt-cli.c $(SRCDIR)/ogrt-cli.h
+CLI_TARGET=ogrt-cli
+CLI_OUT=bin
+
+LIB_SOURCES=$(filter-out $(CLI_SOURCES), $(wildcard $(SRCDIR)/*.c))
+LIB_TARGET=ogrt.so
+LIB_OUT=lib
 
 # utility functions
 dir_guard=@mkdir -p $(@D)
 
 # targets
-all: $(OUTDIR)/$(TARGET)
+all: $(LIB_OUT)/$(LIB_TARGET) $(CLI_OUT)/$(CLI_TARGET)
 
-#TODO: this does not work right now
-$(SRCDIR)/ogrt-cmdline.c: $(SRCDIR)/ogrt-cmdline.ggo
+.PHONY: force
+git_version: force
+	@echo '$(GIT_VERSION)' | cmp -s - $@ || echo '$(GIT_VERSION)' > $@
+
+$(SRCDIR)/ogrt-cmdline.c: $(SRCDIR)/ogrt-cmdline.ggo git_version
 	gengetopt --output-dir $(SRCDIR) --set-version $(GIT_VERSION) --input $(SRCDIR)/ogrt-cmdline.ggo --include-getopt -F ogrt-cmdline
 
-$(OUTDIR)/$(TARGET): $(OBJECTS)
+
+$(LIB_OUT)/$(LIB_TARGET): $(LIB_SOURCES)
 	$(dir_guard)
 	@sed -i s/@@UUID@@/$(shell uuidgen)/ $(STAMP)
-	$(CC) $(OBJECTS) $(STAMP) -o $@ $(LDFLAGS)
+	$(CC) $(STAMP) -o $@  $^ $(CFLAGS) $(LIB_LDFLAGS)
 
-$(OBJECTS): $(BUILDDIR)/%.o : $(SRCDIR)/%.c
+
+$(CLI_OUT)/$(CLI_TARGET): $(CLI_SOURCES) $(LIB_SOURCES)
 	$(dir_guard)
-	$(CC) $(CFLAGS) -c $< -o $@
+	@sed -i s/@@UUID@@/$(shell uuidgen)/ $(STAMP)
+	$(CC) $(STAMP) -o $@  $^ $(CFLAGS) $(CLI_LDFLAGS)
 
 .PHONY : clean
 clean:
-	-rm -rf $(BUILDDIR) $(OUTDIR)
+	-rm -rf $(CLI_OUT) $(LIB_OUT)
