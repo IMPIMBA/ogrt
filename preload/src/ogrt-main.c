@@ -17,14 +17,8 @@ static char  __hostname[HOST_NAME_MAX+1];
  * the daemon fails the init function will return with a non-zero exit code, but program
  * execution will continue as normal.
  */
-__attribute__((constructor)) static int ogrt_init_hook()
+__attribute__((constructor)) static int init()
 {
-  if(ogrt_env_enabled("OGRT_DEBUG_INFO")) {
-    cmdline_parser_print_version();
-    printf("  OGRT_NET_HOST=%s\n  OGRT_NET_PORT=%s\n  OGRT_ENV_JOBID=%s\n  OGRT_ELF_SECTION_NAME=%s\n  OGRT_ELF_NOTE_TYPE=0x%x\n",
-              OGRT_NET_HOST,      OGRT_NET_PORT,      OGRT_ENV_JOBID,      OGRT_ELF_SECTION_NAME,      OGRT_ELF_NOTE_TYPE);
-  }
-
   if(ogrt_env_enabled("OGRT_ACTIVE")) {
     __ogrt_active = true;
   }
@@ -89,6 +83,43 @@ __attribute__((constructor)) static int ogrt_init_hook()
   }
 
   return 0;
+}
+
+/**
+ * Function used when executing the shared library as executable.
+ * Display various information on how the program was compiled.
+ */
+int main(int argc, char *argv[]) {
+  struct gengetopt_args_info ai;
+  if (cmdline_parser(argc, argv, &ai) != 0) {
+      exit(1);
+  }
+
+  if(argc == 1) {
+    cmdline_parser_print_help();
+  }
+
+  if(ai.generate_signature_given) {
+    char hostname[HOST_NAME_MAX+1];
+    if(gethostname(hostname, sizeof(hostname)) != 0) {
+      fprintf(stderr, "failed to get hostname\n");
+      return 1;
+    }
+    printf("Host name: %s\n", hostname);
+
+    struct passwd *pwd_entry = getpwuid(getuid());
+    printf("User name: %s\n", pwd_entry->pw_name);
+
+    uuid_t uuid;
+    uuid_generate(uuid);
+    uuid_unparse_lower(uuid, template_signature+0x51);
+    printf("UUID: %s\n", template_signature+0x51);
+
+    for(unsigned int i=0; i < template_signature_len; i++) {
+      fprintf(stderr, "%c", template_signature[i]);
+    }
+  }
+
 }
 
 bool ogrt_send_processinfo() {

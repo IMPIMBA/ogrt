@@ -1,7 +1,4 @@
 server/ogrt-server.log
-preload/bin
+preload/build
 preload/lib
 _vendor
-preload/git_version
-preload/src/ogrt-cmdline.c
-preload/src/ogrt-cmdline.c
