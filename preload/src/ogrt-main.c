@@ -126,27 +126,23 @@ bool ogrt_send_processinfo() {
     //TODO: refactor the process.
     // it is kind of dirty. the currently running binary is not an so.
 
-    void *so_info = ogrt_get_loaded_so();
-    int32_t *so_info_size = ((int32_t *)so_info);
-    OGRT__SharedObject *shared_object = (OGRT__SharedObject *)(so_info_size + 2);
-    OGRT__SharedObject *shared_object_excl_blank = (OGRT__SharedObject *)(so_info_size + 2) + 2;
+    so_infos *so_infos = ogrt_get_loaded_so();
+    OGRT__SharedObject *shared_object_excl_blank = &(so_infos->shared_objects[2]);
 
     //fprintf(stderr, "OGRT: Listing shared objects:\n");
 
-    OGRT__SharedObject *shared_object_ptr[*so_info_size];
+    OGRT__SharedObject *shared_object_ptr[so_infos->size];
     //for(int i = 0; i < *so_info_size; i++) {
     //  ogrt_log_debug("[D] shared object path=%s, signature=%s\n", shared_object[i].path, shared_object[i].signature);
     //  fprintf(stderr, "OGRT:\tshared object path=%s, signature=%s\n", shared_object[i].path, shared_object[i].signature);
     //  shared_object_ptr[i] = &(shared_object[i]);
     //}
-    for(int i = 0; i < *so_info_size-2; i++) {
+    for(int i = 0; i < so_infos->size-2; i++) {
       shared_object_ptr[i] = &(shared_object_excl_blank[i]);
     }
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-
-    struct passwd *pwd_entry = getpwuid(getuid());
 
     OGRT__ProcessInfo msg;
     ogrt__process_info__init(&msg);
@@ -154,13 +150,12 @@ bool ogrt_send_processinfo() {
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
     msg.time = ts.tv_sec;
-    msg.user_name = pwd_entry->pw_name;
     char *job_id = getenv(OGRT_ENV_JOBID);
     msg.job_id = job_id == NULL ? "UNKNOWN" : job_id;
-    if(shared_object[0].signature != NULL) {
-      msg.signature = shared_object[0].signature;
+    if(so_infos->shared_objects[0].signature != NULL) {
+      msg.signature = so_infos->shared_objects[0].signature;
     }
-    msg.n_shared_objects = *so_info_size-2;
+    msg.n_shared_objects = so_infos->size-2;
     msg.shared_objects = shared_object_ptr;
 
     size_t msg_len = ogrt__process_info__get_packed_size(&msg);
@@ -172,10 +167,10 @@ bool ogrt_send_processinfo() {
 
     /* free stuff */
     free(msg.binpath);
-    for(int i=0; i < *so_info_size; i++) {
-      free(shared_object[i].path);
+    for(int i=0; i < so_infos->size; i++) {
+      free(so_infos->shared_objects[i].path);
     }
-    free(so_info);
+    free(so_infos);
     free(msg_buffer);
     return true;
 }

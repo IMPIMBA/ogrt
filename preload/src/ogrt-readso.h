@@ -31,9 +31,16 @@ struct ogrt_note {
 } __attribute__((packed));
 typedef struct ogrt_note ogrt_note;
 
+struct so_infos {
+  int32_t size;
+  int32_t index;
+  OGRT__SharedObject shared_objects[1];
+};
+typedef struct so_infos so_infos;
+
 /* function prototypes */
 int ogrt_read_signature(const char *note, char *ret_version, char **ret_signature);
 int handle_program_header(struct dl_phdr_info *info, size_t size, void *data);
-void *ogrt_get_loaded_so();
+so_infos *ogrt_get_loaded_so();
 
 #endif

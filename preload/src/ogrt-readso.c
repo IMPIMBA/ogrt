@@ -54,21 +54,14 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
 
   ogrt_log_debug("[D] name=%s (%d segments)\n", info->dlpi_name, info->dlpi_phnum);
 
-  /**
-   * data is a data structure holding an array of SharedObject protobufs.
-   * it also contains the number of elements and an index variable.
-   * The index variable is used to track the number of calls to handle_program_header().
-   */
-  int32_t *so_info_size = ((int32_t *)data);
-  int32_t *so_info_index = ((int32_t *)data) + 1;
-  OGRT__SharedObject *so_infos = (OGRT__SharedObject *)(so_info_size + 2);
+  so_infos *so_infos = data;
 
-  OGRT__SharedObject *shared_object = &(so_infos[*so_info_index]);
+  OGRT__SharedObject *shared_object = &(so_infos->shared_objects[so_infos->index]);
   ogrt__shared_object__init(shared_object);
   shared_object->path = so_name;
 
-  ogrt_log_debug("[D] so_info: size %d, index %d\n", *so_info_size, *so_info_index);
-  ogrt_log_debug("[D] so_info: size %10p, index %10p\n", so_info_size, so_info_index);
+  ogrt_log_debug("[D] so_info: size %d, index %d\n", so_infos->size, so_infos->index);
+  ogrt_log_debug("[D] so_info: size %10p, index %10p\n", so_infos->size, so_infos->index);
 
   /** check all sections */
   for (int j = 0; j < info->dlpi_phnum; j++){
@@ -92,7 +85,7 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
 
       ogrt_log_debug("\n");
   }
-  (*so_info_index)++;
+  so_infos->index += 1;
   return 0;
 }
 
@@ -104,7 +97,7 @@ int count_program_header(__attribute__((unused)) struct dl_phdr_info *info, __at
 }
 
 
-void *ogrt_get_loaded_so()
+so_infos *ogrt_get_loaded_so()
 {
   ogrt_log_debug("[D] Displaying loaded libraries for pid %d (%s):\n", getpid(), ogrt_get_binpath(getpid()));
 
@@ -113,11 +106,9 @@ void *ogrt_get_loaded_so()
   ogrt_log_debug("[D] Total so_count: %u\n", so_count);
 
   ogrt_log_debug("[D] sizeof(OGRT__SharedObject)=%d\n", sizeof(OGRT__SharedObject));
-  void *infos = malloc(sizeof(OGRT__SharedObject) * so_count + sizeof(int32_t) * 2);
-  int32_t *so_info_size = ((int32_t *)infos);
-  int32_t *so_info_index = ((int32_t *)infos) + 1;
-  *so_info_size = so_count;
-  *so_info_index = 0;
+  so_infos *infos = malloc(sizeof(OGRT__SharedObject) * so_count + sizeof(int32_t) * 2);
+  infos->size = so_count;
+  infos->index = 0;
   dl_iterate_phdr(handle_program_header, infos);
 
   return infos;
