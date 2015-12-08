@@ -15,7 +15,7 @@
 #include "ogrt-log.h"
 #include "ogrt-util.h"
 
-/** vendor specific ELF note */
+/* data structures */
 struct elf_note {
   int32_t name_size;
   int32_t desc_size;
@@ -25,7 +25,7 @@ struct elf_note {
 typedef struct elf_note elf_note;
 
 struct ogrt_note {
-  char name[8];
+  char name[8]; /* "OGRT" plus null terminator, plus padding to 4 byte boundary */
   u_char version[1];
   char uuid[37];
 } __attribute__((packed));

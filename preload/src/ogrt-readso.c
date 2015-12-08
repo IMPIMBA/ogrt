@@ -29,8 +29,10 @@ int read_signature(const void *note, u_char *ret_version, char **ret_signature) 
     ogrt_log_debug("\n[D] -> name %s (%10p)!", ogrt_note->name, ogrt_note->name);
     ogrt_log_debug("\n[D] -> version %u (%10p)!", (u_int)(ogrt_note->version[0]), ogrt_note->version);
     ogrt_log_debug("\n[D] -> signature %s (%10p)!", ogrt_note->uuid, ogrt_note->uuid);
-    *ret_version = ogrt_note->version[0];
-    *ret_signature = (char *)ogrt_note->uuid;
+    if(ogrt_note->version[0] == OGRT_STAMP_SUPPORTED_VERSION) {
+      *ret_version = ogrt_note->version[0];
+      *ret_signature = (char *)ogrt_note->uuid;
+    }
   }
 
   return elf_note->desc_size + elf_note->name_size + 12;
