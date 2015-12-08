@@ -63,6 +63,10 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
   int32_t *so_info_index = ((int32_t *)data) + 1;
   OGRT__SharedObject *so_infos = (OGRT__SharedObject *)(so_info_size + 2);
 
+  OGRT__SharedObject *shared_object = &(so_infos[*so_info_index]);
+  ogrt__shared_object__init(shared_object);
+  shared_object->path = so_name;
+
   ogrt_log_debug("[D] so_info: size %d, index %d\n", *so_info_size, *so_info_index);
   ogrt_log_debug("[D] so_info: size %10p, index %10p\n", so_info_size, so_info_index);
 
@@ -77,13 +81,10 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
         char *notes = (char *)(info->dlpi_addr + program_header->p_vaddr);
         if(notes != NULL) {
           u_int offset = 0;
-          OGRT__SharedObject *shared_object = &(so_infos[*so_info_index]);
-          ogrt__shared_object__init(shared_object);
           u_char version = 0;
           char *signature = NULL;
           while(offset < program_header->p_memsz) {
             offset += read_signature(notes + offset, &version, &signature);
-            shared_object->path = strdup(so_name); //TODO: this is wrong, the shared object is also interesting if it does not contain a note section
             shared_object->signature = signature;
           }
         }
@@ -91,7 +92,6 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
 
       ogrt_log_debug("\n");
   }
-  free(so_name);
   (*so_info_index)++;
   return 0;
 }
