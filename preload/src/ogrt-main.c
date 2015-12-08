@@ -170,7 +170,12 @@ bool ogrt_send_processinfo() {
     ogrt__process_info__pack(&msg, msg_serialized);
     send(__daemon_socket, msg_buffer, send_length, 0);
 
-    free(so_info); //TODO: this is a memory leak
+    /* free stuff */
+    free(msg.binpath);
+    for(int i=0; i < *so_info_size; i++) {
+      free(shared_object[i].path);
+    }
+    free(so_info);
     free(msg_buffer);
     return true;
 }
