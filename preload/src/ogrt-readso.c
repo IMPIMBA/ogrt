@@ -20,21 +20,20 @@
  * All values are padded to 4 byte boundaries.
  * OGRT version is 1 byte, uuid is a null terminated string.
  */
-int read_signature(const char *note, char *ret_version, char **ret_signature) {
-  int32_t name_size = *((int32_t *)note);
-  int32_t desc_size = *((int32_t *)(note+4));
-  int32_t type      = *((int32_t *)(note+8));
-  __attribute__((unused)) char *name         = (char *)note+12;
-  char *version      = (char *)note+12+(name_size)+(4-(name_size%4));
-  char *uuid_str         = version+1;
+int read_signature(const void *note, u_char *ret_version, char **ret_signature) {
+  const elf_note *elf_note = note;
 
-  if(type == OGRT_ELF_NOTE_TYPE && *version == OGRT_STAMP_SUPPORTED_VERSION) {
-    ogrt_log_debug("\n[D] found signature %s (%10p)!", uuid_str, uuid_str);
-    *ret_version = *version;
-    *ret_signature = strdup(uuid_str);
+  if(elf_note->type == OGRT_ELF_NOTE_TYPE) {
+    const ogrt_note *ogrt_note = (const struct ogrt_note *)&(elf_note->data);
+    ogrt_log_debug("\n[D] found ogrt note with size %d!", elf_note->desc_size);
+    ogrt_log_debug("\n[D] -> name %s (%10p)!", ogrt_note->name, ogrt_note->name);
+    ogrt_log_debug("\n[D] -> version %u (%10p)!", (u_int)(ogrt_note->version[0]), ogrt_note->version);
+    ogrt_log_debug("\n[D] -> signature %s (%10p)!", ogrt_note->uuid, ogrt_note->uuid);
+    *ret_version = ogrt_note->version[0];
+    *ret_signature = (char *)ogrt_note->uuid;
   }
 
-  return desc_size+name_size+12;
+  return elf_note->desc_size + elf_note->name_size + 12;
 }
 
 /**
@@ -78,7 +77,7 @@ int handle_program_header(struct dl_phdr_info *info, __attribute__((unused))size
           u_int offset = 0;
           OGRT__SharedObject *shared_object = &(so_infos[*so_info_index]);
           ogrt__shared_object__init(shared_object);
-          char version = 0;
+          u_char version = 0;
           char *signature = NULL;
           while(offset < program_header->p_memsz) {
             offset += read_signature(notes + offset, &version, &signature);
