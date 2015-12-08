@@ -1,5 +1,5 @@
 server/ogrt-server.log
-preload/build
+preload/bin
 preload/lib
 _vendor
 preload/git_version
