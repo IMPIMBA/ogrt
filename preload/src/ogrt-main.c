@@ -17,7 +17,7 @@ static char  __hostname[HOST_NAME_MAX+1];
  * the daemon fails the init function will return with a non-zero exit code, but program
  * execution will continue as normal.
  */
-__attribute__((constructor)) static int init()
+__attribute__((constructor)) static int ogrt_preload_init_hook()
 {
   if(ogrt_env_enabled("OGRT_ACTIVE")) {
     __ogrt_active = true;
@@ -85,43 +85,6 @@ __attribute__((constructor)) static int init()
   return 0;
 }
 
-/**
- * Function used when executing the shared library as executable.
- * Display various information on how the program was compiled.
- */
-int main(int argc, char *argv[]) {
-  struct gengetopt_args_info ai;
-  if (cmdline_parser(argc, argv, &ai) != 0) {
-      exit(1);
-  }
-
-  if(argc == 1) {
-    cmdline_parser_print_help();
-  }
-
-  if(ai.generate_signature_given) {
-    char hostname[HOST_NAME_MAX+1];
-    if(gethostname(hostname, sizeof(hostname)) != 0) {
-      fprintf(stderr, "failed to get hostname\n");
-      return 1;
-    }
-    printf("Host name: %s\n", hostname);
-
-    struct passwd *pwd_entry = getpwuid(getuid());
-    printf("User name: %s\n", pwd_entry->pw_name);
-
-    uuid_t uuid;
-    uuid_generate(uuid);
-    uuid_unparse_lower(uuid, template_signature+0x51);
-    printf("UUID: %s\n", template_signature+0x51);
-
-    for(unsigned int i=0; i < template_signature_len; i++) {
-      fprintf(stderr, "%c", template_signature[i]);
-    }
-  }
-
-}
-
 bool ogrt_send_processinfo() {
     //TODO: refactor the process.
     // it is kind of dirty. the currently running binary is not an so.
@@ -159,7 +122,8 @@ bool ogrt_send_processinfo() {
     msg.shared_objects = shared_object_ptr;
 
     size_t msg_len = ogrt__process_info__get_packed_size(&msg);
-    void *msg_serialized = NULL, *msg_buffer = NULL;
+    void *msg_serialized = NULL;
+    char *msg_buffer = NULL;
     int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ProcessInfoMsg, msg_len, &msg_buffer, &msg_serialized);
 
     ogrt__process_info__pack(&msg, msg_serialized);
@@ -276,7 +240,7 @@ int fork(void){
  *
  * This function is incredibly ugly. Should be reworked, but it works, right?
  */
-int ogrt_prepare_sendbuffer(const int message_type, const int payload_length, void **buffer, void **payload) {
+int ogrt_prepare_sendbuffer(const int message_type, const int payload_length, char **buffer, void **payload) {
   uint32_t type = htonl(message_type);
   uint32_t length = htonl(payload_length);
   int total_length = payload_length + sizeof(type) + sizeof(length);

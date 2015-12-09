@@ -38,7 +38,7 @@
 #define OGRT_ELF_NOTE_TYPE    (0x4f475254)
 
 /** function prototypes */
-int ogrt_prepare_sendbuffer(const int message_type, const int message_length, void **buffer_begin, void **payload);
+int ogrt_prepare_sendbuffer(const int message_type, const int message_length, char **buffer_begin, void **payload);
 bool ogrt_send_processinfo();
 
 #endif
