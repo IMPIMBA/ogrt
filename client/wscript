@@ -3,6 +3,7 @@ def options(opt):
 
 def configure(conf):
   conf.load('compiler_c')
+  conf.check(header_name="gelf.h")
   conf.check_cc(stlib = 'protobuf-c')
   conf.check_cc(stlib = 'uuid', fragment="#include <uuid/uuid.h>\nint main() { uuid_t uuid;uuid_generate(uuid); }" )
   try:
