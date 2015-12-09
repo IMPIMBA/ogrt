@@ -12,6 +12,8 @@ it will ruin your day. Also it will not work out of the box.
 
 ### preload
 
+#TODO: update because of reorg
+
 Preload library written in C. It needs to be preloaded (check 'man 8 ld.so'
 for the LD_PRELOAD environment variable) into the process that needs to
 be tracked.

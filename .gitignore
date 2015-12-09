@@ -1,4 +1,4 @@
 server/ogrt-server.log
-preload/build
-preload/lib
-_vendor
+client/build
+client/.*waf*
+client/Makefile
