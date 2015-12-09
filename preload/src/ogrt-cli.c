@@ -1,6 +1,5 @@
 #include "ogrt-main.h"
 
-
 /**
  * Function used when executing the shared library as executable.
  * Display various information on how the program was compiled.
