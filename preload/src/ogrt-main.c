@@ -19,6 +19,12 @@ static char  __hostname[HOST_NAME_MAX+1];
  */
 __attribute__((constructor)) static int ogrt_preload_init_hook()
 {
+  if(ogrt_env_enabled("OGRT_DEBUG_INFO")) {
+    cmdline_parser_print_version();
+    printf("  OGRT_NET_HOST=%s\n  OGRT_NET_PORT=%s\n  OGRT_ENV_JOBID=%s\n  OGRT_ELF_SECTION_NAME=%s\n  OGRT_ELF_NOTE_TYPE=0x%x\n",
+              OGRT_NET_HOST,      OGRT_NET_PORT,      OGRT_ENV_JOBID,      OGRT_ELF_SECTION_NAME,      OGRT_ELF_NOTE_TYPE);
+  }
+
   if(ogrt_env_enabled("OGRT_ACTIVE")) {
     __ogrt_active = true;
   }
