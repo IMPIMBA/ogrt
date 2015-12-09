@@ -1,0 +1,15 @@
+def options(opt):
+  opt.load('compiler_c')
+
+def configure(conf):
+  conf.load('compiler_c')
+  conf.check(features='c cprogram', stlib = 'protobuf-c')
+  conf.check(features='c cprogram', stlib = 'uuid', fragment="#include <uuid/uuid.h>\nint main() { uuid_t uuid;uuid_generate(uuid); }" )
+  conf.check(features='c cprogram', fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
+
+def build(bld):
+  lib_sources = [ "src/ogrt-cmdline.c", "src/ogrt-log.c", "src/ogrt-main.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-signature.c", "src/ogrt-util.c" ]
+  bin_sources = [ "src/ogrt-cli.c", "src/ogrt-cmdline.c", "src/ogrt-log.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-signature.c", "src/ogrt-util.c" ]
+
+  bld(features='c cprogram', cflags="-fPIC --std=c11", source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
+  bld(features='c cshlib', cflags="-fPIC -std=c11", source=lib_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
