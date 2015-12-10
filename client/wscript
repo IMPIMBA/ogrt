@@ -1,3 +1,20 @@
+APPNAME = 'ogrt'
+
+def git_version():
+    import os
+    import sys
+
+    version = None
+    try:
+        version = os.popen('git describe --dirty --always --tags --abbrev=6').read().strip()
+    except Exception as e:
+        print e
+        version='unknown'
+
+    return version
+
+VERSION = git_version()
+
 def options(opt):
   opt.load('compiler_c gnu_dirs')
   config_group = opt.get_option_group('configure options')
@@ -34,5 +51,9 @@ def build(bld):
   lib_sources = [ "src/ogrt-cmdline.c", "src/ogrt-log.c", "src/ogrt-main.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-util.c" ]
   bin_sources = [ "src/ogrt-cli.c", "src/ogrt-cmdline.c", "src/ogrt-signature.c" ]
 
-  bld(features='c cprogram', cflags="-include config.h -g -O3 --std=c99", source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
-  bld(features='c cshlib', cflags="-include config.h -g -O3 -std=c99", source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
+  bld(features='subst', source='src/ogrt-cmdline.h.in', target='ogrt-cmdline.h',  VERSION = git_version() )
+
+  bld(features='c cprogram', cflags="-g -O3 --std=c99", includes='.', source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
+  bld(features='c cshlib', cflags="-g -O3 -std=c99", includes='.', source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
+
+# gengetopt --output-dir src --set-version '@VERSION@' --input src/ogrt-cmdline.ggo --include-getopt -F ogrt-cmdline

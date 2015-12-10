@@ -22,6 +22,7 @@
 #include "ogrt-util.h"
 #include "ogrt-cmdline.h"
 #include "ogrt-signature.h"
+#include "config.h"
 
 /* debug settings */
 //#define OGRT_DEBUG
