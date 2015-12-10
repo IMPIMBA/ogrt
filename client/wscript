@@ -4,13 +4,17 @@ def git_version():
     import os
     import sys
 
-    version = None
+    version = 'unknown'
     try:
         version = os.popen('git describe --dirty --always --tags --abbrev=6').read().strip()
     except Exception as e:
         print e
-        version='unknown'
-
+        try:
+          version_file = open('.version', 'r')
+          version = version_file.read()
+        finally:
+          if version_file:
+            version_file.close()  
     return version
 
 VERSION = git_version()
@@ -55,5 +59,13 @@ def build(bld):
 
   bld(features='c cprogram', cflags="-g -O3 --std=c99", includes='.', source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
   bld(features='c cshlib', cflags="-g -O3 -std=c99", includes='.', source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
+
+def dist(dst):
+  try:
+    version_file = open(".version", 'w')
+    version_file.write(VERSION)
+  finally:
+    if version_file:
+      version_file.close()
 
 # gengetopt --output-dir src --set-version '@VERSION@' --input src/ogrt-cmdline.ggo --include-getopt -F ogrt-cmdline
