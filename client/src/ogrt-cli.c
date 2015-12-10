@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
 
     uuid_t uuid;
     uuid_generate(uuid);
-    uuid_unparse_lower(uuid, template_signature+0x51);
-    printf("UUID: %s\n", template_signature+0x51);
+    uuid_unparse_lower(uuid, template_signature+0x55);
+    printf("UUID: %s\n", template_signature+0x55);
 
     for(unsigned int i=0; i < template_signature_len; i++) {
       fprintf(stderr, "%c", template_signature[i]);
