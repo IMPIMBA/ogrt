@@ -21,12 +21,12 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name (used for printing errors) */
-#define CMDLINE_PARSER_PACKAGE "OGRT"
+#define CMDLINE_PARSER_PACKAGE "ogrt"
 #endif
 
 #ifndef CMDLINE_PARSER_PACKAGE_NAME
 /** @brief the complete program name (used for help and version) */
-#define CMDLINE_PARSER_PACKAGE_NAME "OGRT"
+#define CMDLINE_PARSER_PACKAGE_NAME "ogrt"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION

@@ -1,4 +1,4 @@
-package "OGRT"
+package "ogrt"
 
 defmode "link-info"
 modeoption "generate-signature" - "generate signature object file" mode="link-info" optional
