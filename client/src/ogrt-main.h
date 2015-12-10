@@ -16,6 +16,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <uuid/uuid.h>
+#include <errno.h>
 #include "ogrt.pb-c.h"
 #include "ogrt-readso.h"
 #include "ogrt-log.h"

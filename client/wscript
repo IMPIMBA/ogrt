@@ -52,7 +52,7 @@ def configure(conf):
   conf.write_config_header('config.h')
 
 def build(bld):
-  lib_sources = [ "src/ogrt-cmdline.c", "src/ogrt-log.c", "src/ogrt-main.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-util.c" ]
+  lib_sources = [ "src/ogrt-cmdline.c", "src/ogrt-main.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-util.c" ]
   bin_sources = [ "src/ogrt-cli.c", "src/ogrt-cmdline.c", "src/ogrt-signature.c" ]
 
   bld(features='subst', source='src/ogrt-cmdline.h.in', target='ogrt-cmdline.h',  VERSION = git_version() )

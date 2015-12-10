@@ -10,6 +10,9 @@ static pid_t __pid           =  0;
 static pid_t __parent_pid    =  0;
 static char  __hostname[HOST_NAME_MAX+1];
 
+
+FILE *ogrt_log_file;
+int ogrt_log_level;
 /**
  * Initialize preload library.
  * Checks if tracing is activated using the environment variable OGRT_ACTIVE.
@@ -19,6 +22,13 @@ static char  __hostname[HOST_NAME_MAX+1];
  */
 __attribute__((constructor)) static int ogrt_preload_init_hook()
 {
+  ogrt_log_file = stderr;
+  ogrt_log_level = OGRT_LOG_INFO;
+
+  if(ogrt_env_enabled("OGRT_SCHLEICHFAHRT")) {
+    ogrt_log_level = OGRT_LOG_NOTHING;
+  }
+
   if(ogrt_env_enabled("OGRT_DEBUG_INFO")) {
     cmdline_parser_print_version();
     printf("  OGRT_NET_HOST=%s\n  OGRT_NET_PORT=%s\n  OGRT_ENV_JOBID=%s\n  OGRT_ELF_SECTION_NAME=%s\n  OGRT_ELF_NOTE_TYPE=0x%x\n",
@@ -38,14 +48,14 @@ __attribute__((constructor)) static int ogrt_preload_init_hook()
 
     int ret;
     if ((ret = getaddrinfo(OGRT_NET_HOST, OGRT_NET_PORT, &hints, &servinfo)) != 0) {
-      fprintf(stderr, "OGRT: INITIALIZE: getaddrinfo: %s\n", gai_strerror(ret));
+      Log(OGRT_LOG_ERR, "getaddrinfo: %s\n", gai_strerror(ret));
       __ogrt_active = false;
       return 1;
     }
 
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((__daemon_socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("OGRT: socket");
+            Log(OGRT_LOG_ERR, "%s\n", strerror(errno));
             __ogrt_active = false;
             continue;
         }
@@ -53,7 +63,7 @@ __attribute__((constructor)) static int ogrt_preload_init_hook()
         if (connect(__daemon_socket, p->ai_addr, p->ai_addrlen) == -1) {
             close(__daemon_socket);
             __ogrt_active = false;
-            perror("OGRT: connect");
+            Log(OGRT_LOG_ERR, "%s\n", strerror(errno));
             continue;
         }
 
@@ -61,28 +71,28 @@ __attribute__((constructor)) static int ogrt_preload_init_hook()
     }
 
     if (p == NULL) {
-        fprintf(stderr, "OGRT: INITIALIZE: failed to connect.\n");
+        Log(OGRT_LOG_ERR, "%s\n", strerror(errno));
         __ogrt_active = false;
         return 1;
     }
 
     freeaddrinfo(servinfo);
 
-    fprintf(stderr, "OGRT: Connected to socket.\n");
+    Log(OGRT_LOG_INFO, "Connected to socket.\n");
 
     /* cache PID of current process - we are reusing that quite often */
     __pid = getpid();
     __parent_pid = getppid();
     if(gethostname(__hostname, HOST_NAME_MAX) != 0) {
-      fprintf(stderr, "OGRT: Failed to get hostname\n");
+      Log(OGRT_LOG_ERR, "%s\n", strerror(errno));
       __ogrt_active = false;
       return 1;
     }
 
-    fprintf(stderr, "OGRT: I be watchin' yo! (process %d [%s] with parent %d)\n", __pid, ogrt_get_binpath(__pid), getppid());
+    Log(OGRT_LOG_INFO, "I be watchin' yo! (process %d [%s] with parent %d)\n", __pid, ogrt_get_binpath(__pid), getppid());
 
     if(!ogrt_send_processinfo()) {
-      fprintf(stderr, "OGRT: Failed to send process info\n");
+      Log(OGRT_LOG_ERR, "failed to send process info\n");
       __ogrt_active = 0;
       return 1;
     }
