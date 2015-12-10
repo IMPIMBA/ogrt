@@ -1,0 +1,30 @@
+#!/bin/bash
+
+unwrapped=false
+self=false
+IFS=: read -ra path <<< "$PATH";
+for p in "${path[@]}"; do
+  binary="$p/${0##*/}"
+  if $self && [[ -x "$binary" ]]; then
+    unwrapped="$binary"
+    break
+  elif [[ "$binary" -ef "$0" ]]; then
+    self=true
+  fi
+done
+
+# no arguments, so do nothing
+if [[ ${#@} -eq 0 ]]; then
+  exec "$unwrapped"
+fi
+
+# if ogrt is in path - inject signature to arguments
+if [[ $(command -v ogrt) ]]; then
+  sigfile=$(mktemp)
+  ogrt.so --generate-signature 2>$sigfile
+  arguments+=( $sigfile )
+fi
+
+exec "$unwrapped" "${arguments[@]}" "$@"
+
+[[ -r $sigfile ]] && rm $sigfile

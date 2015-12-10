@@ -1,4 +1,4 @@
-ogrt-server/ogrt.db
-ogrt-preload/build
-ogrt-preload/lib
-_vendor
+server/ogrt-server.log
+client/build
+client/.*waf*
+client/Makefile

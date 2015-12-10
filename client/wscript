@@ -1,0 +1,71 @@
+APPNAME = 'ogrt'
+
+def git_version():
+    import os
+    import sys
+
+    version = 'unknown'
+    try:
+        version = os.popen('git describe --dirty --always --tags --abbrev=6').read().strip()
+    except Exception as e:
+        print e
+        try:
+          version_file = open('.version', 'r')
+          version = version_file.read()
+        finally:
+          if version_file:
+            version_file.close()
+    return version
+
+VERSION = git_version()
+
+def options(opt):
+  opt.load('compiler_c gnu_dirs')
+  config_group = opt.get_option_group('configure options')
+  config_group.add_option('--server-host', dest='server_host', action='store', type='string', help='the hostname of the OGRT server')
+  config_group.add_option('--server-port', dest='server_port', default=7971, action='store', type='int', help='the port of the OGRT server')
+  config_group.add_option('--env-jobid', dest='env_jobid', default="JOBID", action='store', type='string', help='the default environment variable that contains the job id')
+
+
+def configure(conf):
+  conf.load('compiler_c gnu_dirs')
+  conf.check(header_name="gelf.h")
+  conf.check_cc(stlib = 'protobuf-c')
+  conf.check_cc(stlib = 'uuid', fragment="#include <uuid/uuid.h>\nint main() { uuid_t uuid;uuid_generate(uuid); }" )
+  try:
+    conf.check_cc(msg="clock_gettime without librt", fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
+  except conf.errors.WafError:
+    conf.check_cc(msg="clock_gettime with librt", lib = 'rt', uselib_store='rt', fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
+
+  if not conf.options.server_host:
+    raise conf.errors.WafError('no server hostname specified')
+  else:
+    conf.define('OGRT_WAF_SERVER_HOSTNAME', conf.options.server_host)
+
+  if conf.options.server_port < 1 or conf.options.server_port > 65535 :
+    raise conf.errors.WafError('invalid server port specified')
+  else:
+    conf.define('OGRT_WAF_SERVER_PORT', str(conf.options.server_port))
+
+  conf.define('OGRT_WAF_ENV_JOBID', conf.options.env_jobid)
+
+  conf.write_config_header('config.h')
+
+def build(bld):
+  lib_sources = [ "src/ogrt-cmdline.c", "src/ogrt-main.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-util.c" ]
+  bin_sources = [ "src/ogrt-cli.c", "src/ogrt-cmdline.c", "src/ogrt-signature.c" ]
+
+  bld(features='subst', source='src/ogrt-cmdline.h.in', target='ogrt-cmdline.h',  VERSION = git_version() )
+
+  bld(features='c cprogram', cflags="-g -O3 --std=c99", includes='.', source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
+  bld(features='c cshlib', cflags="-g -O3 -std=c99", includes='.', source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
+
+def dist(dst):
+  try:
+    version_file = open(".version", 'w')
+    version_file.write(VERSION)
+  finally:
+    if version_file:
+      version_file.close()
+
+# gengetopt --output-dir src --set-version '@VERSION@' --input src/ogrt-cmdline.ggo --include-getopt -F ogrt-cmdline

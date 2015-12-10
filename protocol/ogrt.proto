@@ -1,0 +1,59 @@
+package OGRT;
+
+enum MessageType {
+  JobStartMsg = 10;
+  JobEndMsg = 11;
+  ProcessInfoMsg = 12;
+  SharedObjectMsg = 13;
+  ForkMsg = 14;
+  ExecveMsg = 15;
+}
+
+message JobStart {
+  required string job_id = 100;
+  required int64 start_time = 101;
+}
+
+message JobEnd {
+  required string job_id = 200;
+  required int64 end_time = 201;
+}
+
+message SharedObject {
+  required string path = 400;
+  optional string signature = 401;
+}
+
+message ProcessInfo {
+  required string binpath = 300;
+  required int32 pid = 301;
+  required int32 parent_pid = 302;
+  required int64 time = 303;
+  optional string signature = 304;
+  optional string job_id = 305;
+  optional string user_name = 306;
+  repeated string environment_variables = 307;
+  repeated SharedObject shared_objects = 308;
+}
+
+message JobInfo {
+  required string job_id = 400;
+  repeated ProcessInfo processes = 401;
+}
+
+message Fork {
+  required string hostname = 500;
+  required int32 parent_pid = 501;
+  required int32 child_pid = 502;
+  optional string name = 503;
+}
+
+message Execve {
+  required string hostname = 600;
+  required int32 pid = 601;
+  required int32 parent_pid = 602;
+  required string filename = 603;
+  repeated string arguments = 604;
+  repeated string environment_variables = 605;
+  optional string uuid = 606;
+}

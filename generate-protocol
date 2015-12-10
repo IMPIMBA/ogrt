@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+## Script to generate protocol definitions
+set -euo pipefail
+
+function is_available() {
+  command -v $1 >/dev/null 2>&1 || { echo >&2 "$1 not available."; exit 1; }
+}
+
+is_available "protoc"
+is_available "protoc-c"
+
+protoc --go_out server/src protocol/ogrt.proto
+protoc-c --c_out client/src/ protocol/ogrt.proto
+
+# copy C source into right location
+mv client/src/protocol/* client/src/
+rmdir  client/src/protocol
+sed -i 's|#include "protocol/ogrt.pb-c.h"|#include "ogrt.pb-c.h"|' client/src/ogrt.pb-c.c
