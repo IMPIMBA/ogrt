@@ -108,3 +108,6 @@ Compilation:
 
 All of this code is GPL3 licensed.
 
+## Splunk and OGRT
+Splunk with fields extracted from OGRT's JSON document. 
+![Splunk field extraction] (https://raw.githubusercontent.com/IMPIMBA/ogrt/screenies/docs/screenies/ogrt-splunk-fields.png?raw=true)
