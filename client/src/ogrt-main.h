@@ -27,13 +27,13 @@
 //#define OGRT_DEBUG
 
 /** network configuration */
-#define OGRT_NET_HOST         ("localhost")
-#define OGRT_NET_PORT         ("6074")
+#define OGRT_NET_HOST         (OGRT_WAF_SERVER_HOSTNAME)
+#define OGRT_NET_PORT         (OGRT_WAF_SERVER_PORT)
 
 /** scheduler configuration */
-#define OGRT_ENV_JOBID        ("OGRT_TEST_JOBID")
+#define OGRT_ENV_JOBID        (OGRT_WAF_ENV_JOBID)
 
-/** ELF stamping configuration */
+/** ELF signature configuration */
 #define OGRT_ELF_SECTION_NAME (".note.ogrt.info")
 #define OGRT_ELF_NOTE_TYPE    (0x4f475254)
 
