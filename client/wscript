@@ -9,7 +9,7 @@ def configure(conf):
   try:
     conf.check_cc(msg="clock_gettime without librt", fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
   except conf.errors.WafError:
-    conf.check_cc(msg="clock_gettime with librt", lib = 'rt', fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
+    conf.check_cc(msg="clock_gettime with librt", lib = 'rt', uselib_store='rt', fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
 
   conf.write_config_header('config.h')
 
@@ -17,5 +17,5 @@ def build(bld):
   lib_sources = [ "src/ogrt-cmdline.c", "src/ogrt-log.c", "src/ogrt-main.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-util.c" ]
   bin_sources = [ "src/ogrt-cli.c", "src/ogrt-cmdline.c", "src/ogrt-signature.c" ]
 
-  bld(features='c cprogram', cflags="-fPIC --std=c11", source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
-  bld(features='c cshlib', cflags="-fPIC -std=c11", source=lib_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
+  bld(features='c cprogram', cflags="-g -O3 --std=c99", source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
+  bld(features='c cshlib', cflags="-g -O3 -std=c99", source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
