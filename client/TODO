@@ -1,0 +1,3 @@
+- hostname and username in protobuf/output
+- configurable environment variables in output
+- static binary for ogrt server
