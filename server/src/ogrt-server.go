@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/golang/protobuf/proto"
+	"github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics/exp"
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"output"
 	"protocol"
 	"strings"
 	"syscall"
+	"time"
 )
 
 var config Configuration
@@ -28,6 +32,7 @@ type Configuration struct {
 	Address          string
 	Port             int
 	MaxReceiveBuffer uint32
+	DebugEndpoint    bool
 	Outputs          map[string]Output
 }
 
@@ -36,6 +41,12 @@ func main() {
 
 	if _, err := toml.DecodeFile("ogrt.conf", &config); err != nil {
 		log.Fatal(err)
+	}
+
+	if config.DebugEndpoint == true {
+		exp.Exp(metrics.DefaultRegistry)
+		go http.ListenAndServe(":8080", nil)
+		log.Printf("Instantiated DebugEndpoint at Port 8080")
 	}
 
 	// Listen for incoming connections.
@@ -62,7 +73,8 @@ func main() {
 		config.Outputs[name] = output_gosucks
 		defer output_gosucks.Writer.Close()
 
-		log.Printf("Instantiated output '%s' (%s) with parameters: '%s'", name, output_gosucks.Type, output_gosucks.Params)
+		metrics.Register("output_"+name, metrics.NewTimer())
+		log.Printf("Instantiated output '%s' of type '%s' with parameters: '%s'", name, output_gosucks.Type, output_gosucks.Params)
 	}
 
 	/* Setup signal handler for SIGKILL and SIGTERM */
@@ -78,16 +90,20 @@ func main() {
 		os.Exit(0)
 	}(sigc)
 
+	accept_timer := metrics.NewTimer()
+	metrics.Register("accept", accept_timer)
+	go metrics.Log(metrics.DefaultRegistry, 5*time.Second, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
+
 	for {
 		// Listen for an incoming connection.
-		connection, err := listener.Accept()
-		if err != nil {
-			log.Fatal("Error accepting: ", err.Error())
-			os.Exit(1)
-		}
-
-		// Handle connections in a new goroutine.
-		go handleRequest(connection)
+		accept_timer.Time(func() {
+			connection, err := listener.Accept()
+			if err != nil {
+				log.Fatal("Error accepting: ", err.Error())
+				os.Exit(1)
+			}
+			go handleRequest(connection)
+		})
 	}
 }
 
@@ -161,8 +177,9 @@ func handleRequest(conn net.Conn) {
 			//				log.Printf("\tso: name=%s, signature=%s", so.GetPath(), so.GetSignature())
 			//			}
 			log.Printf("Persisting JobId=%s,pid=%d,bin=%s", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
-			for _, out := range config.Outputs {
-				out.Writer.PersistProcessInfo(msg)
+			for name, out := range config.Outputs {
+				metric := metrics.Get("output_" + name).(metrics.Timer)
+				metric.Time(func() { out.Writer.PersistProcessInfo(msg) })
 			}
 			log.Printf("Persisting JobId=%s,pid=%d,bin=%s - Done.", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
 		case OGRT.MessageType_value["ExecveMsg"]:
