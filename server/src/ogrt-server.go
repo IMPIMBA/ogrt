@@ -64,6 +64,8 @@ func main() {
 		switch out.Type {
 		case "JsonOverTcp":
 			output_gosucks.Writer = new(output.JsonOverTcpOutput)
+		case "JsonElasticSearch":
+			output_gosucks.Writer = new(output.JsonElasticSearchOutput)
 		case "JsonFile":
 			output_gosucks.Writer = new(output.JsonFileOutput)
 		default:
