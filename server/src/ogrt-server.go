@@ -43,6 +43,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	/* expose metrics as HTTP endpoint */
 	if config.DebugEndpoint == true {
 		exp.Exp(metrics.DefaultRegistry)
 		go http.ListenAndServe(":8080", nil)
@@ -92,8 +93,11 @@ func main() {
 		os.Exit(0)
 	}(sigc)
 
+	/* register timer for accept() */
 	accept_timer := metrics.NewTimer()
 	metrics.Register("accept", accept_timer)
+
+	/* output metrics every five seconds */
 	go metrics.Log(metrics.DefaultRegistry, 5*time.Second, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
 
 	for {
