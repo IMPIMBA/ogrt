@@ -98,7 +98,7 @@ func main() {
 	metrics.Register("accept", accept_timer)
 
 	/* output metrics every five seconds */
-	go metrics.Log(metrics.DefaultRegistry, 5*time.Second, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
+	go metrics.LogScaled(metrics.DefaultRegistry, 5*time.Second, time.Millisecond, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
 
 	for {
 		// Listen for an incoming connection.
