@@ -15,7 +15,6 @@ import (
 	"os/signal"
 	"output"
 	"protocol"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -149,26 +148,6 @@ func handleRequest(conn net.Conn) {
 		}
 
 		switch msg_type {
-		case OGRT.MessageType_value["JobStartMsg"]:
-			msg := new(OGRT.JobStart)
-
-			err = proto.Unmarshal(data, msg)
-			if err != nil {
-				log.Printf("Error decoding ExecveMsg: %s\n", err)
-				continue
-			}
-			log.Printf("JobStart: %s", msg.GetJobId())
-			//			writer.PersistJobStart(msg)
-		case OGRT.MessageType_value["JobEndMsg"]:
-			msg := new(OGRT.JobEnd)
-
-			err = proto.Unmarshal(data, msg)
-			if err != nil {
-				log.Printf("Error decoding ExecveMsg: %s\n", err)
-				continue
-			}
-			log.Printf("JobEnd: %s", msg.GetJobId())
-			//			writer.PersistJobEnd(msg)
 		case OGRT.MessageType_value["ProcessInfoMsg"]:
 			msg := new(OGRT.ProcessInfo)
 
@@ -178,37 +157,12 @@ func handleRequest(conn net.Conn) {
 				continue
 			}
 
-			//			log.Printf("bin: name=%s, signature=%s", msg.GetBinpath(), msg.GetSignature())
-			//			for _, so := range msg.GetSharedObjects() {
-			//				log.Printf("\tso: name=%s, signature=%s", so.GetPath(), so.GetSignature())
-			//			}
 			log.Printf("Persisting JobId=%s,pid=%d,bin=%s", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
 			for name, out := range config.Outputs {
 				metric := metrics.Get("output_" + name).(metrics.Timer)
 				metric.Time(func() { out.Writer.PersistProcessInfo(msg) })
 			}
 			log.Printf("Persisting JobId=%s,pid=%d,bin=%s - Done.", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
-		case OGRT.MessageType_value["ExecveMsg"]:
-			msg := new(OGRT.Execve)
-
-			err = proto.Unmarshal(data, msg)
-			if err != nil {
-				log.Printf("Error decoding ExecveMsg: %s\n", err)
-				continue
-			}
-			args := strings.Join(msg.GetArguments(), " ")
-			log.Printf("Execve: %d -> %s (%s)", msg.GetPid(), msg.GetFilename(), args)
-			//writer.Persist(int64(msg.GetPid()), int64(msg.GetParentPid()), "localhost", msg.GetFilename())
-		case OGRT.MessageType_value["ForkMsg"]:
-			msg := new(OGRT.Fork)
-
-			err = proto.Unmarshal(data, msg)
-			if err != nil {
-				log.Printf("Error decoding ExecveMsg: %s\n", err)
-				continue
-			}
-			log.Printf("Fork: %d -> %d \n", msg.GetParentPid(), msg.GetChildPid())
-			//	writer.Persist(int64(msg.GetParentPid()))
 		}
 
 	}
