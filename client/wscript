@@ -32,6 +32,7 @@ def configure(conf):
   conf.check(header_name="gelf.h")
   conf.check_cc(stlib = 'protobuf-c')
   conf.check_cc(stlib = 'uuid', fragment="#include <uuid/uuid.h>\nint main() { uuid_t uuid;uuid_generate(uuid); }" )
+  conf.check_cc(stlib = 'elf')
   try:
     conf.check_cc(msg="clock_gettime without librt", fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
   except conf.errors.WafError:
@@ -57,7 +58,7 @@ def build(bld):
 
   bld(features='subst', source='src/ogrt-cmdline.h.in', target='ogrt-cmdline.h',  VERSION = git_version() )
 
-  bld(features='c cprogram', cflags="-g -O3 --std=c99", includes='.', source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid'])
+  bld(features='c cprogram', cflags="-g -O3 --std=c99", includes='.', source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid', 'elf'])
   bld(features='c cshlib', cflags="-g -O3 -std=c99", includes='.', source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
 
 def dist(dst):

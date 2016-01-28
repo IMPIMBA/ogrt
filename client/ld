@@ -21,7 +21,7 @@ fi
 # if ogrt is in path - inject signature to arguments
 if [[ $(command -v ogrt) ]]; then
   sigfile=$(mktemp)
-  ogrt.so --generate-signature 2>$sigfile
+  ogrt.so --generate-signature >$sigfile
   arguments+=( $sigfile )
 fi
 

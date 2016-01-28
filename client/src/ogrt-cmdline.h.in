@@ -40,10 +40,14 @@ struct gengetopt_args_info
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
   const char *generate_signature_help; /**< @brief generate signature object file help description.  */
+  char * show_signature_arg;	/**< @brief show signature of ELF.  */
+  char * show_signature_orig;	/**< @brief show signature of ELF original value given at command line.  */
+  const char *show_signature_help; /**< @brief show signature of ELF help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int generate_signature_given ;	/**< @brief Whether generate-signature was given.  */
+  unsigned int show_signature_given ;	/**< @brief Whether show-signature was given.  */
 
   int link_info_mode_counter; /**< @brief Counter for mode link_info */
 } ;

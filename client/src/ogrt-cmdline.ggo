@@ -2,6 +2,7 @@ package "ogrt"
 
 defmode "link-info"
 modeoption "generate-signature" - "generate signature object file" mode="link-info" optional
+modeoption "show-signature" - "show signature of ELF" mode="link-info" string typestr="file" optional
 
 
 

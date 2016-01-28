@@ -25,9 +25,9 @@ struct elf_note {
 typedef struct elf_note elf_note;
 
 struct ogrt_note {
-  uint8_t name[8]; /* "OGRT" plus null terminator, plus padding to 4 byte boundary */
+  char    name[8]; /* "OGRT" plus null terminator, plus padding to 4 byte boundary */
   uint8_t version;
-  uint8_t uuid[37];
+  char    uuid[37];
 } __attribute__((packed));
 typedef struct ogrt_note ogrt_note;
 
