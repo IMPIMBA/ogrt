@@ -22,9 +22,10 @@ import (
 var config Configuration
 
 type Output struct {
-	Type   string
-	Params string
-	Writer output.OGWriter
+	Type    string
+	Params  string
+	Workers int
+	Writer  output.OGWriter
 }
 
 type Configuration struct {
@@ -34,6 +35,9 @@ type Configuration struct {
 	DebugEndpoint    bool
 	Outputs          map[string]Output
 }
+
+var outputs map[string][]Output
+var output_channels map[string]chan interface{}
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
@@ -58,25 +62,33 @@ func main() {
 	// Close the listener when the application closes.
 	defer listener.Close()
 
+	outputs = make(map[string][]Output)
+	output_channels = make(map[string]chan interface{})
+
 	/* instantiate all outputs */
 	for name, out := range config.Outputs {
-		output_gosucks := config.Outputs[name]
-		switch out.Type {
-		case "JsonOverTcp":
-			output_gosucks.Writer = new(output.JsonOverTcpOutput)
-		case "JsonElasticSearch":
-			output_gosucks.Writer = new(output.JsonElasticSearchOutput)
-		case "JsonFile":
-			output_gosucks.Writer = new(output.JsonFileOutput)
-		default:
-			log.Fatal("Unkown output type: ", out.Type)
+		output_channels[name] = make(chan interface{})
+		for i := 0; i < config.Outputs[name].Workers; i++ {
+			var output_gosucks Output
+			switch out.Type {
+			case "JsonOverTcp":
+				output_gosucks.Writer = new(output.JsonOverTcpOutput)
+			case "JsonElasticSearch":
+				output_gosucks.Writer = new(output.JsonElasticSearchOutput)
+			case "JsonFile":
+				output_gosucks.Writer = new(output.JsonFileOutput)
+			default:
+				log.Fatal("Unkown output type: ", out.Type)
+			}
+			output_gosucks.Writer.Open(out.Params)
+
+			outputs[name] = append(outputs[name], output_gosucks)
+			go writeToOutput(name, i, output_channels[name])
+			defer output_gosucks.Writer.Close()
 		}
-		output_gosucks.Writer.Open(out.Params)
-		config.Outputs[name] = output_gosucks
-		defer output_gosucks.Writer.Close()
 
 		metrics.Register("output_"+name, metrics.NewTimer())
-		log.Printf("Instantiated output '%s' of type '%s' with parameters: '%s'", name, output_gosucks.Type, output_gosucks.Params)
+		log.Printf("Instantiated output '%s' of type '%s' with parameters: '%s'", name, config.Outputs[name].Type, config.Outputs[name].Params)
 	}
 
 	/* Setup signal handler for SIGKILL and SIGTERM */
@@ -147,23 +159,38 @@ func handleRequest(conn net.Conn) {
 			return
 		}
 
-		switch msg_type {
-		case OGRT.MessageType_value["ProcessInfoMsg"]:
-			msg := new(OGRT.ProcessInfo)
+		go func() {
+			switch msg_type {
+			case OGRT.MessageType_value["ProcessInfoMsg"]:
+				msg := new(OGRT.ProcessInfo)
 
-			err = proto.Unmarshal(data, msg)
-			if err != nil {
-				log.Printf("Error decoding ExecveMsg: %s\n", err)
-				continue
+				err = proto.Unmarshal(data, msg)
+				if err != nil {
+					log.Printf("Error decoding ExecveMsg: %s\n", err)
+					return
+				}
+
+				for _, c := range output_channels {
+					c <- msg
+				}
 			}
-
-			log.Printf("Persisting JobId=%s,pid=%d,bin=%s", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
-			for name, out := range config.Outputs {
-				metric := metrics.Get("output_" + name).(metrics.Timer)
-				metric.Time(func() { out.Writer.PersistProcessInfo(msg) })
-			}
-			log.Printf("Persisting JobId=%s,pid=%d,bin=%s - Done.", msg.GetJobId(), msg.GetPid(), msg.GetBinpath())
-		}
-
+		}()
 	}
+}
+
+func writeToOutput(output string, id int, messages chan interface{}) {
+	log.Printf("in write")
+	out := outputs[output][id]
+	for message := range messages {
+		switch message := message.(type) {
+		default:
+			log.Printf("unexpected type %T", message)
+		case *OGRT.ProcessInfo:
+			metric := metrics.Get("output_" + output).(metrics.Timer)
+			log.Printf("%d: Persisting JobId=%s,pid=%d,bin=%s", id, message.GetJobId(), message.GetPid(), message.GetBinpath())
+			metric.Time(func() { out.Writer.PersistProcessInfo(message) })
+			log.Printf("%d: Persisting JobId=%s,pid=%d,bin=%s - Done", id, message.GetJobId(), message.GetPid(), message.GetBinpath())
+		}
+	}
+	log.Printf("done")
 }
