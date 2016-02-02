@@ -1,4 +1,5 @@
 [x] hostname and username in protobuf/output
+[ ] default to not sending user/hostname
 [ ] configurable environment variables in output
 [x] localhost by default in configure script
 [x] check protobuf-c include file
