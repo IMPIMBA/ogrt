@@ -8,7 +8,6 @@ def git_version():
     try:
         version = os.popen('git describe --dirty --always --tags --abbrev=6').read().strip()
     except Exception as e:
-        print e
         try:
           version_file = open('.version', 'r')
           version = version_file.read()
@@ -22,17 +21,20 @@ VERSION = git_version()
 def options(opt):
   opt.load('compiler_c gnu_dirs')
   config_group = opt.get_option_group('configure options')
-  config_group.add_option('--server-host', dest='server_host', action='store', type='string', help='the hostname of the OGRT server')
+  config_group.add_option('--server-host', dest='server_host', default="localhost", action='store', type='string', help='the hostname of the OGRT server')
   config_group.add_option('--server-port', dest='server_port', default=7971, action='store', type='int', help='the port of the OGRT server')
   config_group.add_option('--env-jobid', dest='env_jobid', default="JOBID", action='store', type='string', help='the default environment variable that contains the job id')
 
 
 def configure(conf):
   conf.load('compiler_c gnu_dirs')
-  conf.check(header_name="gelf.h")
-  conf.check_cc(stlib = 'protobuf-c')
-  conf.check_cc(stlib = 'uuid', fragment="#include <uuid/uuid.h>\nint main() { uuid_t uuid;uuid_generate(uuid); }" )
   conf.check_cc(stlib = 'elf')
+  conf.check(header_name="gelf.h")
+  conf.check_cc(stlib = 'uuid', fragment="#include <uuid/uuid.h>\nint main() { uuid_t uuid;uuid_generate(uuid); }" )
+  conf.check(header_name="uuid/uuid.h")
+  conf.check_cc(stlib = 'protobuf-c')
+  conf.check(header_name="protobuf-c/protobuf-c.h")
+  conf.check(header_name="time.h")
   try:
     conf.check_cc(msg="clock_gettime without librt", fragment="#include <time.h>\nint main() { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); }")
   except conf.errors.WafError:
