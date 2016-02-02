@@ -14,10 +14,13 @@
 #include <string.h>
 #include <stdbool.h>
 #include <pwd.h>
+#include "ogrt-log.h"
 
 /* function prototypes */
 bool ogrt_env_enabled(char *env_var);
 char *ogrt_normalize_path(const char *path);
 char *ogrt_get_binpath(const pid_t pid);
+char *ogrt_get_username();
+char *ogrt_get_hostname();
 
 #endif

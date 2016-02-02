@@ -1,7 +1,5 @@
 #include "ogrt-util.h"
 
-/* Environment Functions */
-
 /**
  * Check if an environment variable is true
  */
@@ -12,8 +10,6 @@ bool ogrt_env_enabled(char *env_variable) {
   }
   return false;
 }
-
-/* File Functions */
 
 /**
  * Normalize a path to not contain '..' or '.'.
@@ -61,3 +57,29 @@ char *ogrt_get_binpath(const pid_t pid) {
   bin_path[len] = '\0';
   return bin_path;
 }
+
+
+/**
+ * Get username of the current user.
+ * Does not use environment variables to do the lookup.
+ */
+char *ogrt_get_username(){
+  struct passwd *pw = getpwuid(geteuid());
+  if(pw == NULL) {
+    return NULL;
+  }
+  return pw->pw_name;
+}
+
+/**
+ * Get the name of the current host.
+ */
+char *ogrt_get_hostname(){
+  char hostname[HOST_NAME_MAX+1];
+  int ret = gethostname(hostname, sizeof(hostname));
+  if(ret) {
+    return NULL;
+  }
+  return strdup(hostname);
+}
+

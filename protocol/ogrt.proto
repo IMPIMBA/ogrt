@@ -31,9 +31,11 @@ message ProcessInfo {
   required int64 time = 303;
   optional string signature = 304;
   optional string job_id = 305;
-  optional string user_name = 306;
-  repeated string environment_variables = 307;
-  repeated SharedObject shared_objects = 308;
+  optional string username = 306;
+  optional string hostname = 307;
+  repeated string environment_variables = 308;
+  repeated string arguments = 309;
+  repeated SharedObject shared_objects = 310;
 }
 
 message JobInfo {

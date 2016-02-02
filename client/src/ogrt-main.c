@@ -131,6 +131,14 @@ bool ogrt_send_processinfo() {
     msg.time = ts.tv_sec;
     char *job_id = getenv(OGRT_ENV_JOBID);
     msg.job_id = job_id == NULL ? "UNKNOWN" : job_id;
+#if OGRT_MSG_SEND_USERNAME == 1
+    char *username = ogrt_get_username();
+    msg.username = username == NULL ? "UNKNOWN" : username;
+#endif
+#if OGRT_MSG_SEND_HOSTNAME == 1
+    char *hostname= ogrt_get_hostname();
+    msg.hostname = hostname == NULL ? "UNKNOWN" : hostname;
+#endif
     if(so_infos->shared_objects[0].signature != NULL) {
       msg.signature = so_infos->shared_objects[0].signature;
     }

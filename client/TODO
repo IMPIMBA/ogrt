@@ -1,3 +1,6 @@
-- hostname and username in protobuf/output
-- configurable environment variables in output
-- static binary for ogrt server
+[x] hostname and username in protobuf/output
+[ ] configurable environment variables in output
+[x] localhost by default in configure script
+[x] check protobuf-c include file
+[ ] version number in dist tarball
+

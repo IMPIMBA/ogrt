@@ -35,6 +35,10 @@
 /** scheduler configuration */
 #define OGRT_ENV_JOBID        (OGRT_WAF_ENV_JOBID)
 
+/** message send options */
+#define OGRT_MSG_SEND_USERNAME (OGRT_WAF_MSG_SEND_USERNAME)
+#define OGRT_MSG_SEND_HOSTNAME (OGRT_WAF_MSG_SEND_HOSTNAME)
+
 /** ELF signature configuration */
 #define OGRT_ELF_SECTION_NAME (".note.ogrt.info")
 #define OGRT_ELF_NOTE_TYPE    (0x4f475254)
