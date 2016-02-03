@@ -43,7 +43,6 @@ char *ogrt_get_binpath(const pid_t pid) {
   bin_path = malloc(PATH_MAX);
   if (bin_path == NULL) {
     fprintf(stderr, "OGRT: memory allocate failed\n");
-    free(bin_path);
     return NULL;
   }
 
@@ -68,7 +67,7 @@ char *ogrt_get_username(){
   if(pw == NULL) {
     return NULL;
   }
-  return pw->pw_name;
+  return strdup(pw->pw_name);
 }
 
 /**

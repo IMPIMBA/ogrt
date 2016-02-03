@@ -20,7 +20,7 @@ int ogrt_log_level;
  * the daemon fails the init function will return with a non-zero exit code, but program
  * execution will continue as normal.
  */
-__attribute__((constructor)) static int ogrt_preload_init_hook()
+__attribute__((constructor)) int ogrt_preload_init_hook()
 {
   ogrt_log_file = stderr;
   ogrt_log_level = OGRT_LOG_INFO;
@@ -139,6 +139,33 @@ bool ogrt_send_processinfo() {
     char *hostname= ogrt_get_hostname();
     msg.hostname = hostname == NULL ? "UNKNOWN" : hostname;
 #endif
+#if OGRT_MSG_SEND_ENVIRONMENT == 1
+    #ifdef OGRT_MSG_SEND_ENVIRONMENT_WHITELIST
+    size_t envvar_count = 0;
+    char *environment[OGRT_MSG_SEND_ENVIRONMENT_WHITELIST_LENGTH+1];
+    char *whitelist[] = { OGRT_MSG_SEND_ENVIRONMENT_WHITELIST };
+
+    for(int i=0; i < OGRT_MSG_SEND_ENVIRONMENT_WHITELIST_LENGTH; i++) {
+      Log(OGRT_LOG_DBG, "[D] checking env variable: %s\n", whitelist[i]);
+      char *env = getenv(whitelist[i]);
+      if(env != NULL) {
+        Log(OGRT_LOG_DBG, "[D] storing : %s with value '%s'\n", whitelist[i], env);
+        int ret = asprintf(&(environment[envvar_count++]), "%s=%s", whitelist[i], env);
+        if(ret == -1) {
+          Log(OGRT_LOG_ERR, "failed copying environment variable\n");
+        }
+      }
+    }
+    #else
+    size_t envvar_count = 0;
+    char **environment = environ;
+    for(char **iterator = environment; *iterator != NULL; iterator++){
+      envvar_count++;
+    }
+    #endif
+    msg.n_environment_variables = envvar_count;
+    msg.environment_variables = environment;
+#endif
     if(so_infos->shared_objects[0].signature != NULL) {
       msg.signature = so_infos->shared_objects[0].signature;
     }
@@ -160,6 +187,19 @@ bool ogrt_send_processinfo() {
     }
     free(so_infos);
     free(msg_buffer);
+#if OGRT_MSG_SEND_USERNAME == 1
+    free(username);
+#endif
+#if OGRT_MSG_SEND_HOSTNAME == 1
+    free(hostname);
+#endif
+#if OGRT_MSG_SEND_ENVIRONMENT == 1
+#ifdef OGRT_MSG_SEND_ENVIRONMENT_WHITELIST
+    for(int i=0; i < OGRT_MSG_SEND_ENVIRONMENT_WHITELIST_LENGTH; i++) {
+      free(environment[i]);
+    }
+#endif
+#endif
     return true;
 }
 

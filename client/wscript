@@ -27,6 +27,8 @@ def options(opt):
     config_group.add_option('--env-jobid', dest='env_jobid', default="JOBID", action='store', type='string', help='the default environment variable that contains the job id')
     config_group.add_option('--msg-send-username', dest='msg_username', default='yes', action='store', type='choice', choices=['yes', 'no'], help='send username to the server')
     config_group.add_option('--msg-send-hostname', dest='msg_hostname', default='yes', action='store', type='choice', choices=['yes', 'no'], help='send hostname to the server')
+    config_group.add_option('--msg-send-environment', dest='msg_environment', default='no', action='store', type='choice', choices=['yes', 'no'], help='send environment to the server')
+    config_group.add_option('--msg-send-environment-whitelist', dest='msg_environment_whitelist', default='', action='store', type='string', help='limit environment variable sending to these variables (comma separated list)')
 
 def configure(conf):
     conf.load('compiler_c gnu_dirs')
@@ -45,16 +47,22 @@ def configure(conf):
     if not conf.options.server_host:
         raise conf.errors.WafError('no server hostname specified')
     else:
-        conf.define('OGRT_WAF_SERVER_HOSTNAME', conf.options.server_host)
+        conf.define('OGRT_NET_HOST', conf.options.server_host)
 
     if conf.options.server_port < 1 or conf.options.server_port > 65535 :
         raise conf.errors.WafError('invalid server port specified')
     else:
-        conf.define('OGRT_WAF_SERVER_PORT', str(conf.options.server_port))
+        conf.define('OGRT_NET_PORT', str(conf.options.server_port))
 
-    conf.define('OGRT_WAF_ENV_JOBID', conf.options.env_jobid)
-    conf.define('OGRT_WAF_MSG_SEND_USERNAME', 1 if conf.options.msg_username == 'yes' else 0)
-    conf.define('OGRT_WAF_MSG_SEND_HOSTNAME', 1 if conf.options.msg_hostname == 'yes' else 0)
+    environment_whitelist = ', '.join("\"%s\"" % str(e) for e in set(conf.options.msg_environment_whitelist.split(',')) if e)
+    environment_whitelist_length = len(set(environment_whitelist.split(',')))
+    conf.define('OGRT_ENV_JOBID', conf.options.env_jobid)
+    conf.define('OGRT_MSG_SEND_ENVIRONMENT', 1 if conf.options.msg_environment == 'yes' else 0)
+    if environment_whitelist_length > 0:
+        conf.define('OGRT_MSG_SEND_ENVIRONMENT_WHITELIST', environment_whitelist, quote=False)
+        conf.define('OGRT_MSG_SEND_ENVIRONMENT_WHITELIST_LENGTH', environment_whitelist_length)
+    conf.define('OGRT_MSG_SEND_USERNAME', 1 if conf.options.msg_username == 'yes' else 0)
+    conf.define('OGRT_MSG_SEND_HOSTNAME', 1 if conf.options.msg_hostname == 'yes' else 0)
 
     conf.write_config_header('config.h')
 
