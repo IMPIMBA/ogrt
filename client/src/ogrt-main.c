@@ -1,8 +1,5 @@
 #include "ogrt-main.h"
 
-/** macro for function hooking. shamelessly stolen from snoopy */
-#define FN(ptr, type, name, args)  ptr = (type (*)args)dlsym(RTLD_NEXT, name)
-
 /** global variables */
 static bool  __ogrt_active   =  0;
 static int   __daemon_socket = -1;
@@ -13,6 +10,7 @@ static char  __hostname[HOST_NAME_MAX+1];
 
 FILE *ogrt_log_file;
 int ogrt_log_level;
+
 /**
  * Initialize preload library.
  * Checks if tracing is activated using the environment variable OGRT_ACTIVE.
@@ -98,6 +96,7 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
     }
   }
 
+  close(__daemon_socket);
   return 0;
 }
 
@@ -202,95 +201,6 @@ bool ogrt_send_processinfo() {
 #endif
     return true;
 }
-
-#if 0
-/**
- * Hook execve function.
- * This function intercepts the execve call. If OGRT is active it will send
- * the arguments of the function and the PID of the current process to the OGRT daemon.
- */
-int execve(const char *filename, char *const argv[], char *const envp[]){
-  static int (*unhooked_execve)(const char *, char **, char **) = NULL;
-  if(unhooked_execve == NULL) { /* Cache the function address */
-    FN(unhooked_execve, int, "execve", (const char *, char **const, char **const));
-  }
-  if(__ogrt_active) {
-    fprintf(stderr, "OGRT: I be execve: calling %s from %d\n", filename, __pid);
-
-    /* Initialize the protobuf message, fill it, pack it and send it to the daemon */
-    OGRT__Execve msg;
-    ogrt__execve__init(&msg);
-    msg.hostname = strdup(__hostname);
-    msg.pid = __pid;
-    msg.parent_pid = __parent_pid;
-    msg.filename = strdup(filename);
-
-    /* count number of environment variables and pass to message */
-    size_t envvar_count = 0;
-    for(char **iterator = (char **)envp; *iterator != NULL; iterator++){
-      envvar_count++;
-    }
-    msg.n_environment_variables = envvar_count;
-    msg.environment_variables = (char **)envp;
-    /* count number of arguments and pass to message */
-    size_t argv_count = 0;
-    for(char **iterator = (char **)argv; *iterator != NULL; iterator++){
-      argv_count++;
-    }
-    msg.n_arguments = argv_count;
-    msg.arguments = (char **)argv;
-
-    size_t msg_len = ogrt__execve__get_packed_size(&msg);
-    void *msg_serialized = NULL, *msg_buffer = NULL;
-    int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ExecveMsg, msg_len, &msg_buffer, &msg_serialized);
-
-    ogrt__execve__pack(&msg, msg_serialized);
-    send(__daemon_socket, msg_buffer, send_length, 0);
-
-    free(msg.filename);
-    free(msg_buffer);
-  }
-
-  /* Call the original function and return its output */
-  return (*unhooked_execve) (filename, (char**) argv, (char **) envp);
-}
-
-/**
- * Hook fork function.
- * This function intercepts the fork call. If OGRT is active it will send
- * the PID of the forked function and the PID of the current process to the OGRT daemon.
- */
-int fork(void){
-  static int (*unhooked_fork)() = NULL;
-  if(unhooked_fork == NULL) { /* Cache the function address */
-    FN(unhooked_fork, int, "fork", (void));
-  }
-
-  int ret = (*unhooked_fork)();
-  /* ignore parent process */
-  if(__ogrt_active && ret != 0) {
-    fprintf(stderr, "OGRT: I be fork: spawned %d from %d\n", ret, __pid);
-
-    /* Initialize the protobuf message, fill it, pack it and send it to the daemon */
-    OGRT__Fork msg;
-    ogrt__fork__init(&msg);
-    msg.hostname = strdup(__hostname);
-    msg.parent_pid = __pid;
-    msg.child_pid = ret;
-
-    size_t msg_len = ogrt__fork__get_packed_size(&msg);
-    void *msg_serialized = NULL, *msg_buffer = NULL;
-    int send_length = ogrt_prepare_sendbuffer(OGRT__MESSAGE_TYPE__ForkMsg, msg_len, &msg_buffer, &msg_serialized);
-
-    ogrt__fork__pack(&msg, msg_serialized);
-    send(__daemon_socket, msg_buffer, send_length, 0);
-    free(msg_buffer);
-  }
-
-  /* return output of original function */
-  return ret;
-}
-#endif
 
 /**
  * Prepare send buffer for shipping to daemon.
