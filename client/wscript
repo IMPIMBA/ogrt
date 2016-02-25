@@ -21,7 +21,7 @@ VERSION = git_version()
 
 def options(opt):
     config_group = opt.get_option_group('configure options')
-    opt.load('compiler_c gnu_dirs')
+    opt.load('compiler_c gnu_dirs waf_unit_test')
     config_group.add_option('--server-host', dest='server_host', default="localhost", action='store', type='string', help='the hostname of the OGRT server')
     config_group.add_option('--server-port', dest='server_port', default=7971, action='store', type='int', help='the port of the OGRT server')
     config_group.add_option('--env-jobid', dest='env_jobid', default="JOBID", action='store', type='string', help='the default environment variable that contains the job id')
@@ -31,7 +31,7 @@ def options(opt):
     config_group.add_option('--msg-send-environment-whitelist', dest='msg_environment_whitelist', default='', action='store', type='string', help='limit environment variable sending to these variables (comma separated list)')
 
 def configure(conf):
-    conf.load('compiler_c gnu_dirs')
+    conf.load('compiler_c gnu_dirs waf_unit_test')
     conf.check_cc(stlib='elf')
     conf.check(header_name="gelf.h")
     conf.check_cc(stlib='uuid', fragment="#include <uuid/uuid.h>\nint main() { uuid_t uuid;uuid_generate(uuid); }" )
@@ -66,6 +66,25 @@ def configure(conf):
 
     conf.write_config_header('config.h')
 
+def test_summary(bld):
+    from waflib import Logs
+    lst = getattr(bld, 'utest_results', [])
+    if lst:
+        Logs.pprint('CYAN', 'execution summary')
+
+        total = len(lst)
+        tfail = len([x for x in lst if x[1]])
+
+        Logs.pprint('CYAN', '  tests that pass %d/%d' % (total-tfail, total))
+        for (f, code, out, err) in lst:
+            if not code:
+                Logs.pprint('CYAN', '    %s, %s' % (f, out))
+
+        Logs.pprint('CYAN', '  tests that fail %d/%d' % (tfail, total))
+        for (f, code, out, err) in lst:
+            if code:
+                Logs.pprint('CYAN', '    %s' % f)
+
 def build(bld):
     lib_sources = [ "src/ogrt-cmdline.c", "src/ogrt-main.c", "src/ogrt.pb-c.c", "src/ogrt-readso.c", "src/ogrt-util.c" ]
     bin_sources = [ "src/ogrt-cli.c", "src/ogrt-cmdline.c", "src/ogrt-signature.c" ]
@@ -74,6 +93,15 @@ def build(bld):
 
     bld(features='c cprogram', cflags="-g -O3 --std=c99", includes='.', source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid', 'elf'])
     bld(features='c cshlib', cflags="-g -O3 -std=c99", includes='.', source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
+
+    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=[ "test/test_util.c" ] + lib_sources, target='test_util', stlib=['protobuf-c', 'uuid', 'elf'])
+    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=lib_sources + [ "test/test_readso.c" ], target='test_readso', stlib=['protobuf-c', 'uuid', 'elf'])
+
+    bld.options.all_tests = True
+
+    from waflib.Tools import waf_unit_test
+    bld.add_post_fun(test_summary)
+    bld.add_post_fun(waf_unit_test.set_exit_code)
 
 def dist(dst):
     try:
@@ -84,3 +112,5 @@ def dist(dst):
             version_file.close()
 
 # gengetopt --output-dir src --set-version '@VERSION@' --input src/ogrt-cmdline.ggo --include-getopt -F ogrt-cmdline
+
+
