@@ -55,7 +55,7 @@ def configure(conf):
         conf.define('OGRT_NET_PORT', str(conf.options.server_port))
 
     environment_whitelist = ', '.join("\"%s\"" % str(e) for e in set(conf.options.msg_environment_whitelist.split(',')) if e)
-    environment_whitelist_length = len(set(environment_whitelist.split(',')))
+    environment_whitelist_length = len(environment_whitelist.split(',')) if environment_whitelist else 0
     conf.define('OGRT_ENV_JOBID', conf.options.env_jobid)
     conf.define('OGRT_MSG_SEND_ENVIRONMENT', 1 if conf.options.msg_environment == 'yes' else 0)
     if environment_whitelist_length > 0:

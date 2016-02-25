@@ -31,6 +31,15 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
     cmdline_parser_print_version();
     printf("  OGRT_NET_HOST=%s\n  OGRT_NET_PORT=%s\n  OGRT_ENV_JOBID=%s\n  OGRT_ELF_SECTION_NAME=%s\n  OGRT_ELF_NOTE_TYPE=0x%x\n",
               OGRT_NET_HOST,      OGRT_NET_PORT,      OGRT_ENV_JOBID,      OGRT_ELF_SECTION_NAME,      OGRT_ELF_NOTE_TYPE);
+    printf("  OGRT_MSG_SEND_USERNAME=%d\n  OGRT_MSG_SEND_HOSTNAME=%d\n  OGRT_MSG_SEND_ENVIRONMENT=%d\n",
+              OGRT_MSG_SEND_USERNAME,      OGRT_MSG_SEND_HOSTNAME,      OGRT_MSG_SEND_ENVIRONMENT);
+#if OGRT_MSG_SEND_ENVIRONMENT == 1 && defined(OGRT_MSG_SEND_ENVIRONMENT_WHITELIST)
+    printf("  OGRT_ENVIRONMENT_WHITELIST:\n");
+    char *whitelist[] = { OGRT_MSG_SEND_ENVIRONMENT_WHITELIST };
+    for(int i=0; i < OGRT_MSG_SEND_ENVIRONMENT_WHITELIST_LENGTH; i++) {
+      printf("    %s\n", whitelist[i]);
+    }
+#endif
   }
 
   if(ogrt_env_enabled("OGRT_ACTIVE")) {
