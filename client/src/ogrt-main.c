@@ -148,8 +148,9 @@ bool ogrt_send_processinfo() {
     msg.hostname = hostname == NULL ? "UNKNOWN" : hostname;
 #endif
 #if OGRT_MSG_SEND_ENVIRONMENT == 1
-    #ifdef OGRT_MSG_SEND_ENVIRONMENT_WHITELIST
     size_t envvar_count = 0;
+    #ifdef OGRT_MSG_SEND_ENVIRONMENT_WHITELIST
+    /* only get whitelisted variables */
     char *environment[OGRT_MSG_SEND_ENVIRONMENT_WHITELIST_LENGTH+1];
     char *whitelist[] = { OGRT_MSG_SEND_ENVIRONMENT_WHITELIST };
 
@@ -164,8 +165,9 @@ bool ogrt_send_processinfo() {
         }
       }
     }
+    environment[envvar_count] = NULL;
     #else
-    size_t envvar_count = 0;
+    /* get the whole environment */
     char **environment = environ;
     for(char **iterator = environment; *iterator != NULL; iterator++){
       envvar_count++;
@@ -203,7 +205,7 @@ bool ogrt_send_processinfo() {
 #endif
 #if OGRT_MSG_SEND_ENVIRONMENT == 1
 #ifdef OGRT_MSG_SEND_ENVIRONMENT_WHITELIST
-    for(int i=0; i < OGRT_MSG_SEND_ENVIRONMENT_WHITELIST_LENGTH; i++) {
+    for(int i=0; i < envvar_count; i++) {
       free(environment[i]);
     }
 #endif
