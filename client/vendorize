@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# download and build all the dependencies into ./vendor.
+# if you choose to do this the build tool will pick them
+# up instead of the system libraries.
+#
+# this script will take all the available processors it can
+# get. if you do not want this supply a different amount
+# as the first parameter.
+
+# hard mode
+set -e -o pipefail
+
+function download() {
+  local file=$1
+  local url=$2
+
+  [[ -r "vendor/src/$file" ]] || \
+    wget -q -O "vendor/src/$file" "$url"
+}
+
+function download_dependencies() {
+  download "libelf.tar.gz" "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+  download "protobuf.tar.gz" "https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz"
+  download "protobuf-c.tar.gz" "https://github.com/protobuf-c/protobuf-c/releases/download/v1.2.1/protobuf-c-1.2.1.tar.gz"
+  download "util-linux.tar.xz" "https://www.kernel.org/pub/linux/utils/util-linux/v2.27/util-linux-2.27.1.tar.xz"
+}
+
+function cleanup_and_mkdir() {
+  # clean up existing build/install
+  rm -rf "vendor/build"
+  rm -rf "vendor/install"
+
+  # prepare directories
+  mkdir -p "vendor/src"
+  mkdir -p "vendor/build"
+  mkdir -p "vendor/install"
+}
+
+function extract_dependencies() {
+  cd "vendor/src"
+  tar xf libelf.tar.gz     -C ../build
+  tar xf protobuf.tar.gz   -C ../build
+  tar xf protobuf-c.tar.gz -C ../build
+  tar xf util-linux.tar.xz -C ../build
+  cd ../../
+}
+
+function init_paths() {
+  readonly installdir="$(pwd)/vendor/install"
+  export PATH="$(pwd)/vendor/install/bin:$PATH"
+  export CPATH="$(pwd)/vendor/install/include:$CPATH"
+  export LIBRARY_PATH="$(pwd)/vendor/install/lib:$LIBRARY_PATH"
+  export LD_LIBRARY_PATH="$(pwd)/vendor/install/lib:$LD_LIBRARY_PATH"
+  export PKG_CONFIG_PATH="$(pwd)/vendor/install/lib/pkgconfig:$PKG_CONFIG_PATH"
+}
+
+function build_everything() {
+  local numprocs=$1
+  # off we go - build everything!
+  cd "vendor/build"
+
+  cd libelf*
+  ./configure --with-pic --enable-static --prefix="$installdir"
+  make install -j $numprocs
+  cd ..
+
+  cd protobuf*
+  ./configure --with-pic --enable-static --prefix="$installdir"
+  make install -j $numprocs
+  cd ..
+
+  cd protobuf-c*
+  ./configure --with-pic --enable-static --prefix="$installdir"
+  make install -j $numprocs
+  cd ..
+
+  cd util-linux*
+  ./configure --disable-all-programs --enable-libuuid --with-pic --enable-static --without-python --with-bashcompletiondir="$installdir" --prefix="$installdir"
+  make install -j $numprocs
+  cd ..
+}
+
+cleanup_and_mkdir
+download_dependencies
+extract_dependencies
+init_paths
+build_everything ${1:-$(getconf _NPROCESSORS_ONLN)}
+

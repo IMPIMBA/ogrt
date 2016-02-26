@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/usr/bin/env bash
 
 # waf configure wrapper
 
@@ -99,15 +99,13 @@ clean:
 distclean:
 	@$WAF distclean
 	@-rm -rf build
+	@-rm -rf vendor
 	@-rm -f Makefile
-
-check:
-	@$WAF check
 
 dist:
 	@$WAF dist
 
-.PHONY: clean dist distclean check uninstall install all
+.PHONY: clean dist distclean uninstall install all
 
 EOF
 }

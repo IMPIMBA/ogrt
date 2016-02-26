@@ -2,3 +2,4 @@ server/ogrt-server.log
 client/build
 client/.*waf*
 client/Makefile
+client/vendor
