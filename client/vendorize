@@ -10,6 +10,10 @@
 # hard mode
 set -e -o pipefail
 
+function is_available() {
+  command -v $1 >/dev/null 2>&1 || { echo >&2 "I require $1 but it's not installed. Aborting."; exit 1; }
+}
+
 function download() {
   local file=$1
   local url=$2
@@ -79,6 +83,10 @@ function build_everything() {
   make install -j $numprocs
   cd ..
 }
+
+is_available "gcc"
+is_available "python"
+is_available "wget"
 
 cleanup_and_mkdir
 download_dependencies
