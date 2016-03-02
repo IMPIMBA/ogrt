@@ -1,8 +1,0 @@
-[x] hostname and username in protobuf/output
-[x] default to not sending user/hostname
-[x] configurable environment variables in output
-[x] localhost by default in configure script
-[x] check protobuf-c include file
-[ ] version number in dist tarball
-[ ] valgrind complains about a memory leak in ogrt_get_binpath()
-
