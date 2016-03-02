@@ -3,3 +3,4 @@ client/build
 client/.*waf*
 client/Makefile
 client/vendor
+server/dist

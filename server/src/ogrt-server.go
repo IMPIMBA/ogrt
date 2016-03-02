@@ -19,6 +19,8 @@ import (
 	"time"
 )
 
+var VERSION string
+
 var config Configuration
 
 type Output struct {
@@ -41,6 +43,8 @@ var output_channels map[string]chan interface{}
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
+
+	log.Printf("ogrt-server %s", VERSION)
 
 	if _, err := toml.DecodeFile("ogrt.conf", &config); err != nil {
 		log.Fatal(err)
@@ -179,7 +183,6 @@ func handleRequest(conn net.Conn) {
 }
 
 func writeToOutput(output string, id int, messages chan interface{}) {
-	log.Printf("in write")
 	out := outputs[output][id]
 	for message := range messages {
 		switch message := message.(type) {
