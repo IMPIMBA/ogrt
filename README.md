@@ -159,7 +159,8 @@ of libogrt.so. By default the client does not transmit data.
 
 ## Example JSON Output
 
-This is an example of the data provided by OGRT for the job "TESTJOB":
+This is an example of the data provided by OGRT for the job "TESTJOB", which 
+only ran bash. Of the shared libraries only libogrt.so was watermarked.
 
     {
     "job_id": "TESTJOB",
