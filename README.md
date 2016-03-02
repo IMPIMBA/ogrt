@@ -30,7 +30,7 @@ It is very similar to [XALT](https://github.com/Fahey-McLay/xalt) in nature.
 
 An introduction to OGRT on the [1st EasyBuild User
 Meeting](https://github.com/hpcugent/easybuild/wiki/1st-EasyBuild-User-Meeting), includes a demo of tracking functionality and
-getting the data into Elasticsearch/Kibana. Also some history of
+getting the data into Elasticsearch/Kibana. Also some history on
 how OGRT came to be.
 
 
@@ -42,9 +42,9 @@ Get going with OGRT on your local machine in under 10 minutes!
 
 Open a terminal and run:
 
-    wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.2.0/ogrt-server-v0.2.0.tar.xz
-    tar xf ogrt-server-v0.2.0.tar.xz
-    cd ogrt-server
+    wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.3.0/ogrt-server-v0.3.0.tar.bz2
+    tar xf ogrt-server-v0.3.0.tar.bz2
+    cd ogrt-server-v0.3.0
     ./ogrt-server
 
 
@@ -144,21 +144,60 @@ Compilation:
 
 ## Running
 
-1. Run the server. The config file should be in the same directory as
-   the server and the name must be named ogrt.conf. The default ogrt.conf
-   should be enough to get started.
+Execute the server binary. The config file should be in the same directory as
+the server and the name must be named ogrt.conf. The default ogrt.conf
+should be enough to get started.
+
+For the client to be preloaded you need to set LD_PRELOAD to the absolute path
+of libogrt.so. By default the client does not transmit data.
 
 ### Client Environment Variables
 
-- OGRT_ACTIVE: activate OGRT
-- OGRT_SCHLEICHFAHRT: supresses all output
-- OGRT_DEBUG_INFO: print the settings OGRT was compiled with
+- **OGRT_ACTIVE**: activate OGRT (values: 0/1)
+- **OGRT_SCHLEICHFAHRT**: supresses all output (values: 0/1)
+- **OGRT_DEBUG_INFO**: print the settings OGRT was compiled with (values: 0/1)
 
+## Example JSON Output
+
+This is an example of the data provided by OGRT for the job "TESTJOB":
+
+    {
+    "job_id": "TESTJOB",
+    "processes": [
+        {
+            "binpath": "/usr/bin/bash",
+            "hostname": "localhost.localdomain",
+            "job_id": "TESTJOB",
+            "parent_pid": 2983,
+            "pid": 3177,
+            "shared_objects": [
+                {
+                    "path": "/tmp/ogrt/lib64/libogrt.so",
+                    "signature": "708e1ffd-4ced-45d3-81f3-52e059ea3128"
+                },
+                {
+                    "path": "/usr/lib64/libtinfo.so.5.9"
+                },
+                {
+                    "path": "/usr/lib64/libdl-2.17.so"
+                },
+                {
+                    "path": "/usr/lib64/libc-2.17.so"
+                },
+                {
+                    "path": "/usr/lib64/ld-2.17.so"
+                },
+                {
+                    "path": "/usr/lib64/libnss_files-2.17.so"
+                }
+            ],
+            "time": 1456936066,
+            "username": "georg.rath"
+        }
+      ]
+    }
 
 ## License
 
 All of this code is GPL3 licensed.
 
-## Splunk and OGRT
-Splunk with fields extracted from OGRT's JSON document. 
-![Splunk field extraction] (https://raw.githubusercontent.com/IMPIMBA/ogrt/screenies/docs/screenies/ogrt-splunk-fields.png?raw=true)
