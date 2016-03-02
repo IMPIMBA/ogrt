@@ -5,7 +5,7 @@
 OGRT is a tool designed to track user processes on a HPC cluster.
 It is very similar to [XALT](https://github.com/Fahey-McLay/xalt) in nature.
 
-## Features
+### Features
 
 * Transparent tracking of user processes
 * Transparent tracking of shared objects a process loaded
@@ -17,7 +17,7 @@ It is very similar to [XALT](https://github.com/Fahey-McLay/xalt) in nature.
 * Configurable outputs (Elasticsearch, Splunk, File)
 * Painless deployment
 
-## Limitiations
+### Limitiations
 
 * Only works with dynamic executables
 * Only works on GLIBC systems (depends on LD_PRELOAD and GLIBC
