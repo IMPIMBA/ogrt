@@ -42,24 +42,24 @@ Get going with OGRT on your local machine in under 10 minutes!
 
 Open a terminal and run:
 
-  wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.2.0/ogrt-server-v0.2.0.tar.xz
-  tar xf ogrt-server-v0.2.0.tar.xz
-  cd ogrt-server
-  ./ogrt-server
+    wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.2.0/ogrt-server-v0.2.0.tar.xz
+    tar xf ogrt-server-v0.2.0.tar.xz
+    cd ogrt-server
+    ./ogrt-server
 
 
 #### Client
 
 In another terminal:
 
-  git clone https://github.com/IMPIMBA/ogrt.git
-  cd ogrt/client
-  ./vendorize
-  ./configure --prefix=/tmp/ogrt
-  make install
-  LD_PRELOAD=$(find /tmp/ogrt/ -name libogrt.so) OGRT_ACTIVE=1 bash
-  # every command you run in the spawned bash gets sent to the server
-  ls
+    git clone https://github.com/IMPIMBA/ogrt.git
+    cd ogrt/client
+    ./vendorize
+    ./configure --prefix=/tmp/ogrt
+    make install
+    LD_PRELOAD=$(find /tmp/ogrt/ -name libogrt.so) OGRT_ACTIVE=1 bash
+    # every command you run in the spawned bash gets sent to the server
+    ls
 
 ## Architecture
 
