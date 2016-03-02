@@ -11,6 +11,5 @@ cd dist
 cp ../ogrt-server "$DIST"
 cp ../ogrt.conf "$DIST"
 
-export XZ_OPT="-9"
-tar cJf "${DIST}.tar.xz" "$DIST"
+tar cjf "${DIST}.tar.bz2" "$DIST"
 rm -rf "${DIST}"
