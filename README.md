@@ -5,47 +5,101 @@
 OGRT is a tool designed to track user processes on a HPC cluster.
 It is very similar to [XALT](https://github.com/Fahey-McLay/xalt) in nature.
 
-Be warned: this is experimental code. If you deploy this into production
-it will ruin your day. Also it will not work out of the box.
+## Features
 
-## Project Structure
+* Transparent tracking of user processes
+* Transparent tracking of shared objects a process loaded
+* Watermarking of applications at link-time
+* Ultra-fast reading of watermarks
+* Capturing of process environment (whole environment or single
+  variables)
+* Zero runtime dependencies - runs in any environment
+* Configurable outputs (Elasticsearch, Splunk, File)
+* Painless deployment
+
+## Limitiations
+
+* Only works with dynamic executables
+* Only works on GLIBC systems (depends on LD_PRELOAD and GLIBC
+  functions)
+
+
+### Presentations
+
+#### How to stalk the users of your cluster using OGRT: [[slides]](http://goo.gl/zbvChr) [[recording]](https://www.youtube.com/watch?v=3l0eJq0nrOU)
+
+An introduction to OGRT on the [1st EasyBuild User
+Meeting](https://github.com/hpcugent/easybuild/wiki/1st-EasyBuild-User-Meeting), includes a demo of tracking functionality and
+getting the data into Elasticsearch/Kibana. Also some history of
+how OGRT came to be.
+
+
+### Quick Start
+
+Get going with OGRT on your local machine in under 10 minutes!
+
+#### Server
+
+Open a terminal and run:
+
+  wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.2.0/ogrt-server-v0.2.0.tar.xz
+  tar xf ogrt-server-v0.2.0.tar.xz
+  cd ogrt-server
+  ./ogrt-server
+
+
+#### Client
+
+In another terminal:
+
+  git clone https://github.com/IMPIMBA/ogrt.git
+  cd ogrt/client
+  ./vendorize
+  ./configure --prefix=/tmp/ogrt
+  make install
+  LD_PRELOAD=$(find /tmp/ogrt/ -name libogrt.so) OGRT_ACTIVE=1 bash
+  # every command you run in the spawned bash gets sent to the server
+  ls
+
+## Architecture
 
 ### client
 
-Preload library written in C. It needs to be preloaded (check 'man 8 ld.so'
-for a more thorough explanation) into the process that needs to
-be tracked.
+Preload library written in C. It needs to be preloaded into the process
+that needs to be tracked.
 
 This library uses GNU libc facilities to query the loaded shared objects
 of the process it was loaded into. It also checks these shared objects
 for a signature. This signature is not used at the moment, but it is
 intended for tagging programs at link time and then reading them at
-runtime.
+runtime. Reading of this signature happens in memory and is quite fast
+(preloading into an interactive shell is not noticable).
 
 All information gathered by this library is packed into a protobuf message
 and sent (over a tcp socket) to the server. Failure in the preload library
 should not interrupt normal program execution.
 
-This library should be very light by design. The only thing it should do
-is pack up arguments of the hooked functions into a protobuf and send
-them over the wire. Also it accesses the filesystem as little as
-possible (at the moment only for resolution of relative paths to
-absolute ones - eventually).
 
 ### server
 
 Daemon written in Go. The purpose of this daemon is receive and
 preprocess data from the preload library, before persisting it.
 
-It knows how to write JSON over TCP and to write JSON to files.
-The JSON to file output is _very_ slow at the moment and is only
-intended for debugging purposes.
+It supports the following outputs with a configurable number of
+simultaneous workers:
+
+* JSON over TCP (for e.g. Splunk)
+* Elasticsearch
+* JSON to local filesystem (for debugging only)
+
+It is configured using a config file (ogrt.conf).
 
 ### protocol
 
 Contains the protobuf protocol definition. After modifying this file you
 need to run 'generate-protocol' and recompile the preload library and
-the daemon.
+the daemon. You can also use the protobuf definition to implement your
+version of the client/server.
 
 ## Building
 
@@ -60,12 +114,13 @@ Requirements:
 
 Compilation:
 
-1. Make sure your machine fulfills the requirements
-2. Change to the client directory
-2. Run ./configure --server-host=[ogrt-server] --server-port=7971
-   --env-jobid="JOBID"
-3. Run 'make install'
-4. You now have libogrt.so in /usr/local/lib, which talks to
+1. Change to the client directory.
+2. Make sure your machine fulfills the requirements. If you do not care
+   about specifics use the vendorize script.
+3. Run ./configure --server-host=[ogrt-server] --env-jobid="JOBID"
+   --prefix=[installdir]
+4. Run 'make install'
+5. You now have libogrt.so in [installdir], which talks to
    [ogrt-server] on port 7971 and uses the environment variable JOBID to
    figure out the ID of the currently running job
 
@@ -90,18 +145,14 @@ Compilation:
 ## Running
 
 1. Run the server. The config file should be in the same directory as
-   the server and the name must be named ogrt.conf. The default ogrt.conf 
+   the server and the name must be named ogrt.conf. The default ogrt.conf
    should be enough to get started.
-2. Preload the library and set the necessary environment variables:
-   LD_PRELOAD=/usr/local/lib/libogrt.so OGRT_ACTIVE=1 ls
-3. You should have seen some output and a JSON of the program run
-    should be in /tmp/ogrt_jobs/.
 
 ### Client Environment Variables
 
-- OGRT_ACTIVE - activate OGRT
-- OGRT_SCHLEICHFAHRT - supresses all output
-- OGRT_DEBUG_INFO - print the settings OGRT was compiled with
+- OGRT_ACTIVE: activate OGRT
+- OGRT_SCHLEICHFAHRT: supresses all output
+- OGRT_DEBUG_INFO: print the settings OGRT was compiled with
 
 
 ## License
