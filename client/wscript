@@ -75,9 +75,9 @@ def build(bld):
     bld(features='c cprogram', cflags="-g -O3 --std=c99", includes='.', source=bin_sources, target='ogrt', stlib=['protobuf-c', 'uuid', 'elf'])
     bld(features='c cshlib', cflags="-g -O3 -std=c99", includes='.', source=lib_sources, use='rt', target='ogrt', stlib=['protobuf-c', 'uuid'])
 
-    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=[ "test/test_util.c" ] + lib_sources, target='test_util', stlib=['protobuf-c', 'uuid', 'elf'])
-    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=lib_sources + [ "test/test_readso.c" ], target='test_readso', stlib=['protobuf-c', 'uuid', 'elf'])
-    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=lib_sources + [ "test/test_processinfo.c" ], target='test_processinfo', stlib=['protobuf-c', 'uuid', 'elf'])
+    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=lib_sources + [ "test/test_util.c" ], use='rt', target='test_util', stlib=['protobuf-c', 'uuid', 'elf'])
+    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=lib_sources + [ "test/test_readso.c" ], use='rt', target='test_readso', stlib=['protobuf-c', 'uuid', 'elf'])
+    bld(features='c cprogram test', install_path=None, cflags="-g -O3 --std=c99", includes='.', source=lib_sources + [ "test/test_processinfo.c" ], use='rt',  target='test_processinfo', stlib=['protobuf-c', 'uuid', 'elf'])
 
     bld.options.all_tests = True
 
