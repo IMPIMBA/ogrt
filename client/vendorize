@@ -101,6 +101,7 @@ function build_everything() {
 }
 
 is_available "gcc"
+is_available "g++"
 is_available "python"
 is_available "wget"
 
