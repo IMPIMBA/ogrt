@@ -23,6 +23,7 @@ function download() {
 }
 
 function download_dependencies() {
+  echo "Downloading..."
   download "libelf.tar.gz" "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
   download "protobuf.tar.gz" "https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz"
   download "protobuf-c.tar.gz" "https://github.com/protobuf-c/protobuf-c/releases/download/v1.2.1/protobuf-c-1.2.1.tar.gz"
@@ -41,6 +42,7 @@ function cleanup_and_mkdir() {
 }
 
 function extract_dependencies() {
+  echo "Extracting..."
   cd "vendor/src"
   tar xf libelf.tar.gz     -C ../build
   tar xf protobuf.tar.gz   -C ../build
@@ -61,27 +63,41 @@ function init_paths() {
 function build_everything() {
   local numprocs=$1
   # off we go - build everything!
+  echo "Building..."
+
   cd "vendor/build"
 
-  cd libelf*
-  ./configure --with-pic --enable-static --prefix="$installdir"
-  make install -j $numprocs
-  cd ..
+  echo -e "\tlibelf..."
+  {
+    cd libelf*
+    ./configure --with-pic --enable-static --prefix="$installdir"
+    make install -j $numprocs
+    cd ..
+  } &> /dev/null
 
-  cd protobuf*
-  ./configure --with-pic --enable-static --prefix="$installdir"
-  make install -j $numprocs
-  cd ..
+  echo -e "\tprotobuf..."
+  {
+    cd protobuf*
+    ./configure --with-pic --enable-static --prefix="$installdir"
+    make install -j $numprocs
+    cd ..
+  } &> /dev/null
 
-  cd protobuf-c*
-  ./configure --with-pic --enable-static --prefix="$installdir"
-  make install -j $numprocs
-  cd ..
+  echo -e "\tprotobuf-c..."
+  {
+    cd protobuf-c*
+    ./configure --with-pic --enable-static --prefix="$installdir"
+    make install -j $numprocs
+    cd ..
+  } &> /dev/null
 
-  cd util-linux*
-  ./configure --disable-all-programs --enable-libuuid --with-pic --enable-static --without-python --with-bashcompletiondir="$installdir" --prefix="$installdir"
-  make install -j $numprocs
-  cd ..
+  echo -e "\tutil-linux..."
+  {
+    cd util-linux*
+    ./configure --disable-all-programs --enable-libuuid --with-pic --enable-static --without-python --with-bashcompletiondir="$installdir" --prefix="$installdir"
+    make install -j $numprocs
+    cd ..
+  } &> /dev/null
 }
 
 is_available "gcc"
