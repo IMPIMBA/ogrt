@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+## OGRT Linker Wrapper
+#
+# Generate a signature object file and append it
+# to the arguments to ld.
+# This script is heavily influenced by a ld hardening
+# script I found somewhere in the interwebs.
+###
+
+function is_debug() {
+  [[ $OGRT_DEBUG == 1 || $OGRT_DEBUG == "yes" || $OGRT_DEBUG == "true" ]]
+}
+
+unwrapped=false
+self=false
+IFS=: read -ra path <<< "$PATH";
+for p in "${path[@]}"; do
+  binary="$p/${0##*/}"
+  if $self && [[ -x "$binary" ]]; then
+    unwrapped="$binary"
+    break
+  elif [[ "$binary" -ef "$0" ]]; then
+    self=true
+  fi
+done
+
+# no arguments, so do nothing
+if [[ ${#@} -eq 0 ]]; then
+  exec "$unwrapped"
+fi
+
+# if ogrt is in path - inject signature to arguments
+if [[ $(command -v ogrt) ]]; then
+  sigfile=$(mktemp)
+  if [[ $? == 0 ]]; then
+    # generate signature file
+    ogrt --generate-signature > $sigfile
+    [[ $? == 0 ]] && arguments+=( $sigfile ) && is_debug && echo "OGRT: appended signature $sigfile to argument list"
+  fi
+fi
+
+exec "$unwrapped" "${arguments[@]}" "$@"
+
+# delete signature file if we are not in debug mode
+[[ -r $sigfile ]] && !is_debug && rm $sigfile
