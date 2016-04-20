@@ -42,9 +42,9 @@ Get going with OGRT on your local machine in under 10 minutes!
 
 Open a terminal and run:
 
-    wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.3.0/ogrt-server-v0.3.0.tar.bz2
-    tar xf ogrt-server-v0.3.0.tar.bz2
-    cd ogrt-server-v0.3.0
+    wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.3.1/ogrt-server-v0.3.1.tar.bz2
+    tar xf ogrt-server-v0.3.1.tar.bz2
+    cd ogrt-server-v0.3.1
     ./ogrt-server
 
 
