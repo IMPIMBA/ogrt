@@ -23,7 +23,7 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
   ogrt_log_file = stderr;
   ogrt_log_level = OGRT_LOG_INFO;
 
-  if(ogrt_env_enabled("OGRT_SCHLEICHFAHRT")) {
+  if(ogrt_env_enabled("OGRT_SILENT") || ogrt_env_enabled("OGRT_SCHLEICHFAHRT")) {
     ogrt_log_level = OGRT_LOG_NOTHING;
   }
 

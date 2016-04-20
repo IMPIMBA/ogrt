@@ -154,7 +154,7 @@ of libogrt.so. By default the client does not transmit data.
 ### Client Environment Variables
 
 - **OGRT_ACTIVE**: activate OGRT (values: 0/1)
-- **OGRT_SCHLEICHFAHRT**: supresses all output (values: 0/1)
+- **OGRT_SILENT**: supresses all output (values: 0/1)
 - **OGRT_DEBUG_INFO**: print the settings OGRT was compiled with (values: 0/1)
 
 ## Example JSON Output
