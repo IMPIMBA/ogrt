@@ -152,9 +152,10 @@ type ProcessInfo struct {
 	JobId                *string         `protobuf:"bytes,305,opt,name=job_id" json:"job_id,omitempty"`
 	Username             *string         `protobuf:"bytes,306,opt,name=username" json:"username,omitempty"`
 	Hostname             *string         `protobuf:"bytes,307,opt,name=hostname" json:"hostname,omitempty"`
-	EnvironmentVariables []string        `protobuf:"bytes,308,rep,name=environment_variables" json:"environment_variables,omitempty"`
-	Arguments            []string        `protobuf:"bytes,309,rep,name=arguments" json:"arguments,omitempty"`
-	SharedObjects        []*SharedObject `protobuf:"bytes,310,rep,name=shared_objects" json:"shared_objects,omitempty"`
+	Cmdline              *string         `protobuf:"bytes,308,opt,name=cmdline" json:"cmdline,omitempty"`
+	EnvironmentVariables []string        `protobuf:"bytes,309,rep,name=environment_variables" json:"environment_variables,omitempty"`
+	Arguments            []string        `protobuf:"bytes,310,rep,name=arguments" json:"arguments,omitempty"`
+	SharedObjects        []*SharedObject `protobuf:"bytes,311,rep,name=shared_objects" json:"shared_objects,omitempty"`
 	XXX_unrecognized     []byte          `json:"-"`
 }
 
@@ -214,6 +215,13 @@ func (m *ProcessInfo) GetUsername() string {
 func (m *ProcessInfo) GetHostname() string {
 	if m != nil && m.Hostname != nil {
 		return *m.Hostname
+	}
+	return ""
+}
+
+func (m *ProcessInfo) GetCmdline() string {
+	if m != nil && m.Cmdline != nil {
+		return *m.Cmdline
 	}
 	return ""
 }

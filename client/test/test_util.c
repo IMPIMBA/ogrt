@@ -22,3 +22,12 @@ TEST_START(ogrt_get_username, "check if username is not null")
   TEST_PASS;
 }
 TEST_END
+
+TEST_START(ogrt_get_cmdline, "check if cmdline is not null")
+{
+  char *cmdline = ogrt_get_cmdline(getpid());
+  assert(cmdline != NULL);
+  free(cmdline);
+  TEST_PASS;
+}
+TEST_END

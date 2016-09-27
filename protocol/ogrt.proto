@@ -33,9 +33,10 @@ message ProcessInfo {
   optional string job_id = 305;
   optional string username = 306;
   optional string hostname = 307;
-  repeated string environment_variables = 308;
-  repeated string arguments = 309;
-  repeated SharedObject shared_objects = 310;
+  optional string cmdline = 308;
+  repeated string environment_variables = 309;
+  repeated string arguments = 310;
+  repeated SharedObject shared_objects = 311;
 }
 
 message JobInfo {

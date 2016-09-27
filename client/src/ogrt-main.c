@@ -33,6 +33,8 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
               OGRT_NET_HOST,      OGRT_NET_PORT,      OGRT_ENV_JOBID,      OGRT_ELF_SECTION_NAME,      OGRT_ELF_NOTE_TYPE);
     printf("  OGRT_MSG_SEND_USERNAME=%d\n  OGRT_MSG_SEND_HOSTNAME=%d\n  OGRT_MSG_SEND_ENVIRONMENT=%d\n",
               OGRT_MSG_SEND_USERNAME,      OGRT_MSG_SEND_HOSTNAME,      OGRT_MSG_SEND_ENVIRONMENT);
+    printf("  OGRT_MSG_SEND_CMDLINE=%d\n",
+              OGRT_MSG_SEND_CMDLINE);
 #if OGRT_MSG_SEND_ENVIRONMENT == 1 && defined(OGRT_MSG_SEND_ENVIRONMENT_WHITELIST)
     printf("  OGRT_ENVIRONMENT_WHITELIST:\n");
     char *whitelist[] = { OGRT_MSG_SEND_ENVIRONMENT_WHITELIST };
@@ -134,6 +136,10 @@ bool ogrt_send_processinfo() {
     OGRT__ProcessInfo msg;
     ogrt__process_info__init(&msg);
     msg.binpath = ogrt_get_binpath(__pid);
+#if OGRT_MSG_SEND_CMDLINE == 1
+    char *cmdline = ogrt_get_cmdline(__pid);
+    msg.cmdline = cmdline;
+#endif
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
     msg.time = ts.tv_sec;
@@ -202,6 +208,9 @@ bool ogrt_send_processinfo() {
 #endif
 #if OGRT_MSG_SEND_HOSTNAME == 1
     free(hostname);
+#endif
+#if OGRT_MSG_SEND_CMDLINE == 1
+    free(cmdline);
 #endif
 #if OGRT_MSG_SEND_ENVIRONMENT == 1
 #ifdef OGRT_MSG_SEND_ENVIRONMENT_WHITELIST

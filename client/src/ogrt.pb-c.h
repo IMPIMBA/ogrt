@@ -82,6 +82,7 @@ struct  _OGRT__ProcessInfo
   char *job_id;
   char *username;
   char *hostname;
+  char *cmdline;
   size_t n_environment_variables;
   char **environment_variables;
   size_t n_arguments;
@@ -91,7 +92,7 @@ struct  _OGRT__ProcessInfo
 };
 #define OGRT__PROCESS_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&ogrt__process_info__descriptor) \
-    , NULL, 0, 0, 0, NULL, NULL, NULL, NULL, 0,NULL, 0,NULL, 0,NULL }
+    , NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, 0,NULL, 0,NULL, 0,NULL }
 
 
 struct  _OGRT__JobInfo

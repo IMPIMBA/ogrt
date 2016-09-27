@@ -461,7 +461,7 @@ const ProtobufCMessageDescriptor ogrt__shared_object__descriptor =
   (ProtobufCMessageInit) ogrt__shared_object__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[11] =
+static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[12] =
 {
   {
     "binpath",
@@ -560,8 +560,20 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[11] 
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "environment_variables",
+    "cmdline",
     308,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(OGRT__ProcessInfo, cmdline),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "environment_variables",
+    309,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
     offsetof(OGRT__ProcessInfo, n_environment_variables),
@@ -573,7 +585,7 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[11] 
   },
   {
     "arguments",
-    309,
+    310,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_STRING,
     offsetof(OGRT__ProcessInfo, n_arguments),
@@ -585,7 +597,7 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[11] 
   },
   {
     "shared_objects",
-    310,
+    311,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
     offsetof(OGRT__ProcessInfo, n_shared_objects),
@@ -597,14 +609,15 @@ static const ProtobufCFieldDescriptor ogrt__process_info__field_descriptors[11] 
   },
 };
 static const unsigned ogrt__process_info__field_indices_by_name[] = {
-  9,   /* field[9] = arguments */
+  10,   /* field[10] = arguments */
   0,   /* field[0] = binpath */
-  8,   /* field[8] = environment_variables */
+  8,   /* field[8] = cmdline */
+  9,   /* field[9] = environment_variables */
   7,   /* field[7] = hostname */
   5,   /* field[5] = job_id */
   2,   /* field[2] = parent_pid */
   1,   /* field[1] = pid */
-  10,   /* field[10] = shared_objects */
+  11,   /* field[11] = shared_objects */
   4,   /* field[4] = signature */
   3,   /* field[3] = time */
   6,   /* field[6] = username */
@@ -612,7 +625,7 @@ static const unsigned ogrt__process_info__field_indices_by_name[] = {
 static const ProtobufCIntRange ogrt__process_info__number_ranges[1 + 1] =
 {
   { 300, 0 },
-  { 0, 11 }
+  { 0, 12 }
 };
 const ProtobufCMessageDescriptor ogrt__process_info__descriptor =
 {
@@ -622,7 +635,7 @@ const ProtobufCMessageDescriptor ogrt__process_info__descriptor =
   "OGRT__ProcessInfo",
   "OGRT",
   sizeof(OGRT__ProcessInfo),
-  11,
+  12,
   ogrt__process_info__field_descriptors,
   ogrt__process_info__field_indices_by_name,
   1,  ogrt__process_info__number_ranges,
