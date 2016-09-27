@@ -24,6 +24,10 @@ message SharedObject {
   optional string signature = 401;
 }
 
+message Module {
+  required string name = 700;
+}
+
 message ProcessInfo {
   required string binpath = 300;
   required int32 pid = 301;
@@ -36,6 +40,8 @@ message ProcessInfo {
   repeated string environment_variables = 308;
   repeated string arguments = 309;
   repeated SharedObject shared_objects = 310;
+  repeated Module loaded_modules = 311;
+  required string cmdline = 312;
 }
 
 message JobInfo {

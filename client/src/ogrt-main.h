@@ -3,6 +3,7 @@
 
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -17,6 +18,7 @@
 #include <stdbool.h>
 #include <uuid/uuid.h>
 #include <errno.h>
+#include <regex.h>
 #include "ogrt.pb-c.h"
 #include "ogrt-readso.h"
 #include "ogrt-log.h"

@@ -1,4 +1,5 @@
 #include "ogrt-main.h"
+#include "ogrt-config.h"
 
 /** global variables */
 static bool  __ogrt_active   =  0;
@@ -6,7 +7,6 @@ static int   __daemon_socket = -1;
 static pid_t __pid           =  0;
 static pid_t __parent_pid    =  0;
 static char  __hostname[HOST_NAME_MAX+1];
-
 
 FILE *ogrt_log_file;
 int ogrt_log_level;
@@ -28,6 +28,7 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
   }
 
   if(ogrt_env_enabled("OGRT_DEBUG_INFO")) {
+    ogrt_log_level = OGRT_LOG_DBG;
     cmdline_parser_print_version();
     printf("  OGRT_NET_HOST=%s\n  OGRT_NET_PORT=%s\n  OGRT_ENV_JOBID=%s\n  OGRT_ELF_SECTION_NAME=%s\n  OGRT_ELF_NOTE_TYPE=0x%x\n",
               OGRT_NET_HOST,      OGRT_NET_PORT,      OGRT_ENV_JOBID,      OGRT_ELF_SECTION_NAME,      OGRT_ELF_NOTE_TYPE);
@@ -96,6 +97,22 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
       return 1;
     }
 
+    //unsetenv("LD_PRELOAD");
+
+    regex_t regex;
+    for( int i=0; i < ignorePathSz; i++){
+      if(regcomp(&regex,ignorePathA[i],0)){
+        Log(OGRT_LOG_ERR, "Can not compile regex: %s\n", ignorePathA[i]);
+        __ogrt_active = false;
+        return 1;
+      }
+      if(regexec(&regex,ogrt_get_binpath(__pid),0,NULL,0) == 0){
+        Log(OGRT_LOG_ERR, "Matching regex: %s\n", ignorePathA[i]);
+        __ogrt_active = false;
+        return 1;
+      }
+    }
+
     Log(OGRT_LOG_INFO, "I be watchin' yo! (process %d [%s] with parent %d)\n", __pid, ogrt_get_binpath(__pid), getppid());
 
     if(!ogrt_send_processinfo()) {
@@ -133,6 +150,41 @@ bool ogrt_send_processinfo() {
 
     OGRT__ProcessInfo msg;
     ogrt__process_info__init(&msg);
+    
+    // Count number of occurrences of ':' in LOADEDMODULES
+    char *s,*t;
+    size_t cnt;
+    OGRT__Module **loaded_modules;
+    s = getenv("LOADEDMODULES");
+    if(s){
+	    for (cnt=0, s=getenv("LOADEDMODULES"); t=strchr(s, ':'); s=t+1, cnt++);
+	    Log(OGRT_LOG_DBG, "[D] checking env variablei LOADEDMODULES with %d occurrences\n", cnt);
+	    loaded_modules = malloc(sizeof(OGRT__Module)*(cnt+1));
+	    int size = strlen(getenv("LOADEDMODULES"));
+	    char *env_loaded_modules = malloc(sizeof( char )* size + 1);
+	    env_loaded_modules = strcpy(env_loaded_modules,getenv("LOADEDMODULES"));
+	    const char delim[2] = ":";
+	    char * ptr;
+	    t = strtok(env_loaded_modules, delim);
+	    for (cnt=0; t; cnt++){
+		    Log(OGRT_LOG_DBG, "[D] %s module detected\n",t);
+		    Log(OGRT_LOG_DBG, "[D] iter %d\n",cnt);
+		    loaded_modules[cnt] = malloc(sizeof(OGRT__Module));
+		    ogrt__module__init(loaded_modules[cnt]);
+		    loaded_modules[cnt]->name = strdup(t);
+		    Log(OGRT_LOG_DBG, "[D] %s module detected\n",loaded_modules[cnt]->name);
+		    t = strtok(NULL, delim);
+	    }
+	    Log(OGRT_LOG_DBG, "[D] iter %d\n",cnt);
+	    msg.n_loaded_modules = cnt;
+	    msg.loaded_modules = loaded_modules;
+    }else{
+	    msg.n_loaded_modules = 0;
+	    msg.loaded_modules = loaded_modules;
+    }
+
+    Log(OGRT_LOG_DBG, "[D] adding cmd line %s\n",ogrt_get_cmdline(__pid));
+    msg.cmdline = ogrt_get_cmdline(__pid);
     msg.binpath = ogrt_get_binpath(__pid);
     msg.pid = __pid;
     msg.parent_pid = __parent_pid;
@@ -210,6 +262,10 @@ bool ogrt_send_processinfo() {
     }
 #endif
 #endif
+
+
+
+
     return true;
 }
 

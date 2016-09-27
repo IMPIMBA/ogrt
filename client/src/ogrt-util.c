@@ -57,6 +57,33 @@ char *ogrt_get_binpath(const pid_t pid) {
   return bin_path;
 }
 
+/**
+ * Given the pid of a program return the cmdline.
+ * This is done by walking /proc.
+ */
+char *ogrt_get_cmdline(const pid_t pid) {
+  char proc_path[PATH_MAX];
+  sprintf(proc_path, "/proc/%d/cmdline", pid);
+
+  char *cmdline;
+  cmdline = malloc(PATH_MAX);
+  if (cmdline == NULL) {
+    fprintf(stderr, "OGRT: memory allocate failed\n");
+    return NULL;
+  }
+
+  int fd = open(proc_path, O_RDONLY);
+  int nbytesread = read(fd,cmdline,PATH_MAX);
+  fprintf(stderr, "OGRT: read cmdline bytes: %d\n",nbytesread);
+  char *end = cmdline + nbytesread;
+  for(char * p=cmdline; p<end;){
+	while(*p++);
+	*(p-1) = ' ';
+  }
+  *end='\0';
+  
+  return cmdline;
+}
 
 /**
  * Get username of the current user.
