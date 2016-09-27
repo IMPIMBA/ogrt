@@ -59,7 +59,11 @@ func main() {
 
 	// Listen for incoming connections.
 	listen_string := fmt.Sprintf("%s:%d", config.Address, config.Port)
-	listener, err := net.Listen("tcp", listen_string)
+	ServerAddr, err := net.ResolveUDPAddr("udp", listen_string)
+	if err != nil {
+		log.Fatal("Error resolving UDP address:", err.Error())
+	}
+	listener, err := net.ListenUDP("udp", ServerAddr)
 	if err != nil {
 		log.Fatal("Error listening:", err.Error())
 	}
@@ -108,77 +112,53 @@ func main() {
 		os.Exit(0)
 	}(sigc)
 
-	/* register timer for accept() */
-	accept_timer := metrics.NewTimer()
-	metrics.Register("accept", accept_timer)
+	/* register timer for receive() */
+	receive_timer := metrics.NewTimer()
+	metrics.Register("receive", receive_timer)
 
 	/* output metrics every five seconds */
 	go metrics.LogScaled(metrics.DefaultRegistry, 5*time.Second, time.Millisecond, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
 
-	for {
-		// Listen for an incoming connection.
-		accept_timer.Time(func() {
-			connection, err := listener.Accept()
-			if err != nil {
-				log.Fatal("Error accepting: ", err.Error())
-				os.Exit(1)
-			}
-			go handleRequest(connection)
-		})
-	}
-}
-
-// Handles incoming requests.
-func handleRequest(conn net.Conn) {
-	// Close the connection when the function exits
-	defer conn.Close()
-
+	packet_buffer := make([]byte, config.MaxReceiveBuffer)
 	// Read the data waiting on the connection and put it in the data buffer
 	for {
 		// Read header from the connection
-		header := make([]byte, 8)
-		n, err := conn.Read(header)
+		n, addr, err := listener.ReadFromUDP(packet_buffer)
+		log.Printf("read %d bytes from %s", n, addr)
 		if err == io.EOF {
 			return
 		} else if err != nil {
-			log.Printf("Connection closed unexpectedly after receiving %d bytes with error %s.\n", n, err)
+			log.Printf("error while receiving from %s, bytes: %d, error: %s", addr, n, err)
 			return
 		}
 
-		// Decode type and length of packet from header
-		msg_type := int32(binary.BigEndian.Uint32(header[0:4]))
-		msg_length := binary.BigEndian.Uint32(header[4:8])
+		receive_timer.Time(func() {
+			// Decode type and length of packet from header
+			msg_type := int32(binary.BigEndian.Uint32(packet_buffer[0:4]))
+			msg_length := binary.BigEndian.Uint32(packet_buffer[4:8])
 
-		if msg_length > config.MaxReceiveBuffer {
-			log.Printf("OGRT_SERVER: Received message bigger than maximum receive buffer")
-			return
-		}
-		// allocate a buffer as big as the payload and read the rest of the packet
-		data := make([]byte, msg_length)
-		n, err = conn.Read(data)
-		if err == io.EOF {
-			return
-		} else if err != nil {
-			log.Printf("Connection closed unexpectedly after receiving %d bytes with error %s.\n", n, err)
-			return
-		}
+			log.Printf("type: %d, length: %d", msg_type, msg_length)
 
-		go func() {
-			switch msg_type {
-			case OGRT.MessageType_value["ProcessInfoMsg"]:
-				msg := new(OGRT.ProcessInfo)
+			// allocate a buffer as big as the payload and read the rest of the packet
+			data := packet_buffer[8 : msg_length+8]
 
-				err = proto.Unmarshal(data, msg)
-				if err != nil {
-					log.Printf("Error decoding ExecveMsg: %s\n", err)
-					return
+			go func() {
+				switch msg_type {
+				case OGRT.MessageType_value["ProcessInfoMsg"]:
+					msg := new(OGRT.ProcessInfo)
+
+					err = proto.Unmarshal(data, msg)
+					if err != nil {
+						log.Printf("Error decoding ExecveMsg: %s\n", err)
+						return
+					}
+
+					for _, c := range output_channels {
+						c <- msg
+					}
 				}
-
-				for _, c := range output_channels {
-					c <- msg
-				}
-			}
-		}()
+			}()
+		})
 	}
 }
 
