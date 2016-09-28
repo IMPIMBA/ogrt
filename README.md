@@ -147,9 +147,10 @@ Compilation:
 1. Make sure you have a working installation of go
 2. go get "github.com/BurntSushi/toml"
 3. go get "github.com/golang/protobuf/proto"
-4. Run 'build.sh' in the 'server' directory
-5. Your server binary is 'server/ogrt-server'
-6. For guidance on how to configure the outputs check ogrt.conf in the
+4. go get "github.com/vrischmann/go-metrics-influxdb"
+5. Run 'build.sh' in the 'server' directory
+6. Your server binary is 'server/ogrt-server'
+7. For guidance on how to configure the outputs check ogrt.conf in the
    server directory.
 
 ## Running

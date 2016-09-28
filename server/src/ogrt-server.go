@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/rcrowley/go-metrics"
 	"github.com/rcrowley/go-metrics/exp"
+	"github.com/vrischmann/go-metrics-influxdb"
 	"io"
 	"log"
 	"net"
@@ -30,6 +31,14 @@ type Output struct {
 	Writer  output.OGWriter
 }
 
+type InfluxMetrics struct {
+	Interval uint32
+	URL      string
+	Database string
+	User     string
+	Password string
+}
+
 type Configuration struct {
 	Address          string
 	Port             int
@@ -37,6 +46,7 @@ type Configuration struct {
 	DebugEndpoint    bool
 	PrintMetrics     uint32
 	Outputs          map[string]Output
+	InfluxMetrics    InfluxMetrics
 }
 
 var outputs map[string][]Output
@@ -121,6 +131,18 @@ func main() {
 	if config.PrintMetrics > 0 {
 		log.Printf("printing metrics every %d seconds", config.PrintMetrics)
 		go metrics.LogScaled(metrics.DefaultRegistry, time.Duration(config.PrintMetrics)*time.Second, time.Millisecond, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
+	}
+
+	if config.InfluxMetrics.Interval > 0 {
+		log.Printf("sending metrics every %d seconds to %s (db: %s) as %s", config.InfluxMetrics.Interval, config.InfluxMetrics.URL, config.InfluxMetrics.Database, config.InfluxMetrics.User)
+		go influxdb.InfluxDB(
+			metrics.DefaultRegistry,                                  // metrics registry
+			time.Second*time.Duration(config.InfluxMetrics.Interval), // interval
+			config.InfluxMetrics.URL,                                 // the InfluxDB url
+			config.InfluxMetrics.Database,                            // your InfluxDB database
+			config.InfluxMetrics.User,                                // your InfluxDB user
+			config.InfluxMetrics.Password,                            // your InfluxDB password
+		)
 	}
 
 	packet_buffer := make([]byte, config.MaxReceiveBuffer)
