@@ -3,7 +3,7 @@
 ## Ominous Glibc Runtime Tracker
 
 OGRT is a tool designed to track user processes on a HPC cluster.
-It is very similar to [XALT](https://github.com/Fahey-McLay/xalt) in nature.
+It extends on the concepts introduced with [XALT](https://github.com/Fahey-McLay/xalt).
 
 ### Features
 
@@ -13,6 +13,8 @@ It is very similar to [XALT](https://github.com/Fahey-McLay/xalt) in nature.
 * Ultra-fast reading of watermarks
 * Capturing of process environment (whole environment or single
   variables)
+* Capturing of loaded environment modules
+* Filtering of monitored binaries (eg. skip monitoring of /bin)
 * Zero runtime dependencies - runs in any environment
 * Configurable outputs (Elasticsearch, Splunk, File)
 * Painless deployment
@@ -25,6 +27,10 @@ It is very similar to [XALT](https://github.com/Fahey-McLay/xalt) in nature.
 
 
 ### Presentations
+
+#### [[Into the Job: Gaining Insight into Your Workloads Using OGRT]](http://hpckp.org/index.php/conference/2016/159-into-the-job-gaining-insight-into-your-workloads-using-ogrt)
+
+Introduction of OGRT on the [HPCKP16](http://hpckp.org/index.php/conference/2016)
 
 #### How to stalk the users of your cluster using OGRT: [[slides]](http://goo.gl/zbvChr) [[recording]](https://www.youtube.com/watch?v=3l0eJq0nrOU)
 
@@ -42,9 +48,9 @@ Get going with OGRT on your local machine in under 10 minutes!
 
 Open a terminal and run:
 
-    wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.3.1/ogrt-server-v0.3.1.tar.bz2
-    tar xf ogrt-server-v0.3.1.tar.bz2
-    cd ogrt-server-v0.3.1
+    wget -q https://github.com/IMPIMBA/ogrt/releases/download/v0.4.0/ogrt-server-v0.4.0.tar.bz2
+    tar xf ogrt-server-v0.4.0.tar.bz2
+    cd ogrt-server-v0.4.0
     ./ogrt-server
 
 
@@ -76,8 +82,8 @@ runtime. Reading of this signature happens in memory and is quite fast
 (preloading into an interactive shell is not noticable).
 
 All information gathered by this library is packed into a protobuf message
-and sent (over a tcp socket) to the server. Failure in the preload library
-should not interrupt normal program execution.
+and sent (via UDP) to the server. Failure in the preload library
+does not interrupt program execution.
 
 
 ### server
@@ -124,6 +130,11 @@ Compilation:
    [ogrt-server] on port 7971 and uses the environment variable JOBID to
    figure out the ID of the currently running job
 
+Configuration:
+
+The client is very flexible in what it sends to the server.
+Run "./configure --help" for a full list of options.
+
 ### server
 
 Requirements:
@@ -134,10 +145,9 @@ Requirements:
 Compilation:
 
 1. Make sure you have a working installation of go
-2. Set the GOPATH to the absolute path of the server directory
 2. go get "github.com/BurntSushi/toml"
 3. go get "github.com/golang/protobuf/proto"
-4. Run 'go build src/ogrt-server.go' in the 'server' directory
+4. Run 'build.sh' in the 'server' directory
 5. Your server binary is 'server/ogrt-server'
 6. For guidance on how to configure the outputs check ogrt.conf in the
    server directory.
@@ -159,43 +169,41 @@ of libogrt.so. By default the client does not transmit data.
 
 ## Example JSON Output
 
-This is an example of the data provided by OGRT for the job "TESTJOB", which 
-only ran bash. Of the shared libraries only libogrt.so was watermarked.
+This is an example of the data provided by OGRT for the job "TESTJOB", which
+only ran "gcc --help". Of the shared libraries only libogrt.so was watermarked.
 
     {
-    "job_id": "TESTJOB",
-    "processes": [
-        {
-            "binpath": "/usr/bin/bash",
-            "hostname": "localhost.localdomain",
-            "job_id": "TESTJOB",
-            "parent_pid": 2983,
-            "pid": 3177,
-            "shared_objects": [
-                {
-                    "path": "/tmp/ogrt/lib64/libogrt.so",
-                    "signature": "708e1ffd-4ced-45d3-81f3-52e059ea3128"
-                },
-                {
-                    "path": "/usr/lib64/libtinfo.so.5.9"
-                },
-                {
-                    "path": "/usr/lib64/libdl-2.17.so"
-                },
-                {
-                    "path": "/usr/lib64/libc-2.17.so"
-                },
-                {
-                    "path": "/usr/lib64/ld-2.17.so"
-                },
-                {
-                    "path": "/usr/lib64/libnss_files-2.17.so"
-                }
-            ],
-            "time": 1456936066,
-            "username": "georg.rath"
-        }
-      ]
+        "binpath": "/usr/bin/gcc-4.8",
+        "cmdline": "/usr/bin/gcc --help",
+        "hostname": "ogrtest",
+        "job_id": "TESTJOB",
+        "loaded_modules": [
+            {
+                "name": "gcc/4.6.2"
+            },
+            {
+                "name": "dev"
+            }
+        ],
+        "parent_pid": 3342,
+        "pid": 12089,
+        "shared_objects": [
+            {
+                "path": "/tmp/install/lib/libogrt.so",
+                "signature": "708e1ffd-4ced-45d3-81f3-52e059ea3128"
+            },
+            {
+                "path": "/lib/x86_64-linux-gnu/libc-2.19.so"
+            },
+            {
+                "path": "/lib/x86_64-linux-gnu/ld-2.19.so"
+            },
+            {
+                "path": "/lib/x86_64-linux-gnu/libnss_files-2.19.so"
+            }
+        ],
+        "time": 1475062870,
+        "username": "georg.rath"
     }
 
 ## License
