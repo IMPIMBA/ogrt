@@ -30,6 +30,7 @@ def options(opt):
     config_group.add_option('--msg-send-cmdline', dest='msg_cmdline', default='yes', action='store', type='choice', choices=['yes', 'no'], help='send cmdline of program to the server')
     config_group.add_option('--msg-send-environment', dest='msg_environment', default='no', action='store', type='choice', choices=['yes', 'no'], help='send environment to the server')
     config_group.add_option('--msg-send-environment-whitelist', dest='msg_environment_whitelist', default='', action='store', type='string', help='limit environment variable sending to these variables (comma separated list)')
+    config_group.add_option('--msg-send-loadedmodules', dest='msg_loadedmodules', default='yes', action='store', type='choice', choices=['yes', 'no'], help='send loaded modules at the time to the server')
 
 def configure(conf):
     conf.load('compiler_c gnu_dirs waf_unit_test')
@@ -65,6 +66,7 @@ def configure(conf):
     conf.define('OGRT_MSG_SEND_USERNAME', 1 if conf.options.msg_username == 'yes' else 0)
     conf.define('OGRT_MSG_SEND_HOSTNAME', 1 if conf.options.msg_hostname == 'yes' else 0)
     conf.define('OGRT_MSG_SEND_CMDLINE', 1 if conf.options.msg_cmdline == 'yes' else 0)
+    conf.define('OGRT_MSG_SEND_LOADEDMODULES', 1 if conf.options.msg_loadedmodules == 'yes' else 0)
 
     conf.write_config_header('config.h')
 

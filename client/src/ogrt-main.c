@@ -136,6 +136,49 @@ bool ogrt_send_processinfo() {
     OGRT__ProcessInfo msg;
     ogrt__process_info__init(&msg);
     msg.binpath = ogrt_get_binpath(__pid);
+
+#if OGRT_MSG_SEND_LOADEDMODULES == 1
+    OGRT__Module **loaded_modules = NULL;
+    char *module_env = getenv("LOADEDMODULES");
+    msg.n_loaded_modules = 0;
+    if(module_env) {
+      /* first count the modules */
+      int module_count = 0;
+      char *count_string = strdup(module_env);
+      char *count_token = strtok(count_string, ":");
+      while(count_token) { module_count++; count_token = strtok(NULL, ":"); }
+      free(count_string);
+
+      Log(OGRT_LOG_DBG, "[D] checking env variable LOADEDMODULES with %d occurrences\n", module_count);
+
+      if(module_count > 0) {
+        /* allocate space for modules */
+        loaded_modules = malloc(sizeof(OGRT__Module) * module_count);
+
+        /* fill the protobuf */
+        char *module_string = strdup(module_env);
+        char *module_token = strtok(module_string, ":");
+        for (module_count=0; module_token; module_count++) {
+          Log(OGRT_LOG_DBG, "[D] token iteration %d\n", module_count);
+
+          loaded_modules[module_count] = malloc(sizeof(OGRT__Module));
+          ogrt__module__init(loaded_modules[module_count]);
+          loaded_modules[module_count]->name = strdup(module_token);
+
+          Log(OGRT_LOG_DBG, "[D] %s module detected\n", loaded_modules[module_count]->name);
+          module_token=strtok(NULL, ":");
+        }
+        free(module_string);
+        msg.n_loaded_modules = module_count;
+        Log(OGRT_LOG_DBG, "[D] module count: %ld \n", msg.n_loaded_modules);
+      }
+    }
+
+    if(msg.n_loaded_modules > 0) {
+      msg.loaded_modules = loaded_modules;
+    }
+#endif
+
 #if OGRT_MSG_SEND_CMDLINE == 1
     char *cmdline = ogrt_get_cmdline(__pid);
     msg.cmdline = cmdline;
@@ -203,6 +246,16 @@ bool ogrt_send_processinfo() {
     }
     free(so_infos);
     free(msg_buffer);
+
+#if OGRT_MSG_SEND_LOADEDMODULES == 1
+    if(msg.n_loaded_modules > 0) {
+      for(int i = 0; i < msg.n_loaded_modules; i++) {
+        free(loaded_modules[i]->name);
+        free(loaded_modules[i]);
+      }
+      free(msg.loaded_modules);
+    }
+#endif
 #if OGRT_MSG_SEND_USERNAME == 1
     free(username);
 #endif

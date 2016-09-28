@@ -12,6 +12,7 @@ It has these top-level messages:
 	JobStart
 	JobEnd
 	SharedObject
+	Module
 	ProcessInfo
 	JobInfo
 	Fork
@@ -143,6 +144,22 @@ func (m *SharedObject) GetSignature() string {
 	return ""
 }
 
+type Module struct {
+	Name             *string `protobuf:"bytes,700,req,name=name" json:"name,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *Module) Reset()         { *m = Module{} }
+func (m *Module) String() string { return proto.CompactTextString(m) }
+func (*Module) ProtoMessage()    {}
+
+func (m *Module) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
 type ProcessInfo struct {
 	Binpath              *string         `protobuf:"bytes,300,req,name=binpath" json:"binpath,omitempty"`
 	Pid                  *int32          `protobuf:"varint,301,req,name=pid" json:"pid,omitempty"`
@@ -156,6 +173,7 @@ type ProcessInfo struct {
 	EnvironmentVariables []string        `protobuf:"bytes,309,rep,name=environment_variables" json:"environment_variables,omitempty"`
 	Arguments            []string        `protobuf:"bytes,310,rep,name=arguments" json:"arguments,omitempty"`
 	SharedObjects        []*SharedObject `protobuf:"bytes,311,rep,name=shared_objects" json:"shared_objects,omitempty"`
+	LoadedModules        []*Module       `protobuf:"bytes,312,rep,name=loaded_modules" json:"loaded_modules,omitempty"`
 	XXX_unrecognized     []byte          `json:"-"`
 }
 
@@ -243,6 +261,13 @@ func (m *ProcessInfo) GetArguments() []string {
 func (m *ProcessInfo) GetSharedObjects() []*SharedObject {
 	if m != nil {
 		return m.SharedObjects
+	}
+	return nil
+}
+
+func (m *ProcessInfo) GetLoadedModules() []*Module {
+	if m != nil {
+		return m.LoadedModules
 	}
 	return nil
 }
