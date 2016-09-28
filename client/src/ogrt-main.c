@@ -33,8 +33,15 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
               OGRT_NET_HOST,      OGRT_NET_PORT,      OGRT_ENV_JOBID,      OGRT_ELF_SECTION_NAME,      OGRT_ELF_NOTE_TYPE);
     printf("  OGRT_MSG_SEND_USERNAME=%d\n  OGRT_MSG_SEND_HOSTNAME=%d\n  OGRT_MSG_SEND_ENVIRONMENT=%d\n",
               OGRT_MSG_SEND_USERNAME,      OGRT_MSG_SEND_HOSTNAME,      OGRT_MSG_SEND_ENVIRONMENT);
-    printf("  OGRT_MSG_SEND_CMDLINE=%d\n",
-              OGRT_MSG_SEND_CMDLINE);
+    printf("  OGRT_MSG_SEND_CMDLINE=%d\n  OGRT_MSG_SEND_LOADEDMODULES=%d\n",
+              OGRT_MSG_SEND_CMDLINE,      OGRT_MSG_SEND_LOADEDMODULES);
+#if OGRT_FILTER_REGEXPS == 1
+    printf("  OGRT_FILTER_REGEXP_LIST:\n");
+    char *regexp_list[] = { OGRT_FILTER_REGEXPS_LIST };
+    for(int i=0; i < OGRT_FILTER_REGEXPS_LIST_LENGTH; i++) {
+      printf("    %s\n", regexp_list[i]);
+    }
+#endif
 #if OGRT_MSG_SEND_ENVIRONMENT == 1 && defined(OGRT_MSG_SEND_ENVIRONMENT_WHITELIST)
     printf("  OGRT_ENVIRONMENT_WHITELIST:\n");
     char *whitelist[] = { OGRT_MSG_SEND_ENVIRONMENT_WHITELIST };
