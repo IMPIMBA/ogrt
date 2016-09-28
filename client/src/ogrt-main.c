@@ -49,6 +49,33 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
   }
 
   if(__ogrt_active && __daemon_socket < 0) {
+    /* cache PID of current process - we are reusing that quite often */
+    __pid = getpid();
+    __parent_pid = getppid();
+    if(gethostname(__hostname, HOST_NAME_MAX) != 0) {
+      Log(OGRT_LOG_ERR, "%s\n", strerror(errno));
+      __ogrt_active = false;
+      return 1;
+    }
+
+#if OGRT_FILTER_REGEXPS == 1
+    char *regexps[] = { OGRT_FILTER_REGEXPS_LIST };
+    regex_t regex;
+    for(int i=0; i < OGRT_FILTER_REGEXPS_LIST_LENGTH; i++){
+      if(regcomp(&regex, regexps[i], 0)) {
+        Log(OGRT_LOG_ERR, "Can not compile regex: %s\n", regexps[i]);
+        __ogrt_active = false;
+        return 1;
+      }
+
+      if(regexec(&regex, ogrt_get_binpath(__pid), 0, NULL, 0) == 0){
+        Log(OGRT_LOG_DBG, "Matching regex: %s\n", regexps[i]);
+        __ogrt_active = false;
+        return 1;
+      }
+    }
+#endif
+
     /* establish a connection the the ogrt server */
     struct addrinfo hints, *servinfo, *p;
     memset(&hints, 0, sizeof hints);
@@ -88,15 +115,6 @@ __attribute__((constructor)) int ogrt_preload_init_hook()
     freeaddrinfo(servinfo);
 
     Log(OGRT_LOG_INFO, "Connected to socket.\n");
-
-    /* cache PID of current process - we are reusing that quite often */
-    __pid = getpid();
-    __parent_pid = getppid();
-    if(gethostname(__hostname, HOST_NAME_MAX) != 0) {
-      Log(OGRT_LOG_ERR, "%s\n", strerror(errno));
-      __ogrt_active = false;
-      return 1;
-    }
 
     Log(OGRT_LOG_INFO, "I be watchin' yo! (process %d [%s] with parent %d)\n", __pid, ogrt_get_binpath(__pid), getppid());
 
