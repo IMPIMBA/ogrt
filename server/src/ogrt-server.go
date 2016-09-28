@@ -35,6 +35,7 @@ type Configuration struct {
 	Port             int
 	MaxReceiveBuffer uint32
 	DebugEndpoint    bool
+	PrintMetrics     uint32
 	Outputs          map[string]Output
 }
 
@@ -54,7 +55,7 @@ func main() {
 	if config.DebugEndpoint == true {
 		exp.Exp(metrics.DefaultRegistry)
 		go http.ListenAndServe(":8080", nil)
-		log.Printf("Instantiated DebugEndpoint at Port 8080")
+		log.Printf("Instantiated DebugEndpoint at Port 8080 (http://0.0.0.0:8080/debug/metrics)")
 	}
 
 	// Listen for incoming connections.
@@ -77,22 +78,22 @@ func main() {
 	for name, out := range config.Outputs {
 		output_channels[name] = make(chan interface{})
 		for i := 0; i < config.Outputs[name].Workers; i++ {
-			var output_gosucks Output
+			var output_ Output
 			switch out.Type {
 			case "JsonOverTcp":
-				output_gosucks.Writer = new(output.JsonOverTcpOutput)
+				output_.Writer = new(output.JsonOverTcpOutput)
 			case "JsonElasticSearch":
-				output_gosucks.Writer = new(output.JsonElasticSearchOutput)
+				output_.Writer = new(output.JsonElasticSearchOutput)
 			case "JsonFile":
-				output_gosucks.Writer = new(output.JsonFileOutput)
+				output_.Writer = new(output.JsonFileOutput)
 			default:
 				log.Fatal("Unkown output type: ", out.Type)
 			}
-			output_gosucks.Writer.Open(out.Params)
+			output_.Writer.Open(out.Params)
 
-			outputs[name] = append(outputs[name], output_gosucks)
+			outputs[name] = append(outputs[name], output_)
 			go writeToOutput(name, i, output_channels[name])
-			defer output_gosucks.Writer.Close()
+			defer output_.Writer.Close()
 		}
 
 		metrics.Register("output_"+name, metrics.NewTimer())
@@ -116,8 +117,11 @@ func main() {
 	receive_timer := metrics.NewTimer()
 	metrics.Register("receive", receive_timer)
 
-	/* output metrics every five seconds */
-	go metrics.LogScaled(metrics.DefaultRegistry, 5*time.Second, time.Millisecond, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
+	/* output metrics on stderr */
+	if config.PrintMetrics > 0 {
+		log.Printf("printing metrics every %d seconds", config.PrintMetrics)
+		go metrics.LogScaled(metrics.DefaultRegistry, time.Duration(config.PrintMetrics)*time.Second, time.Millisecond, log.New(os.Stderr, "metrics: ", log.Lmicroseconds))
+	}
 
 	packet_buffer := make([]byte, config.MaxReceiveBuffer)
 	// Read the data waiting on the connection and put it in the data buffer
